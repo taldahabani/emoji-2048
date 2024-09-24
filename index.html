@@ -13,7 +13,7 @@
             background-color: #faf8ef;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             overflow: hidden;
         }
         #game-container {
@@ -21,6 +21,7 @@
             max-width: 500px;
             padding: 20px;
             box-sizing: border-box;
+            margin-top: 10vh; /* Adjust this value to move the board higher or lower */
         }
         h1 {
             text-align: center;
@@ -41,16 +42,20 @@
             background-color: #bbada0;
             border-radius: 6px;
             padding: 10px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
             touch-action: none;
         }
         .tile {
-            aspect-ratio: 1;
             background-color: #cdc1b4;
             border-radius: 3px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2em;
+            aspect-ratio: 1 / 1;
         }
         #new-game-btn {
             display: block;
@@ -111,10 +116,7 @@
             const gameBoard = document.getElementById('game-board');
             const containerWidth = gameBoard.offsetWidth;
             const tileSize = (containerWidth - 50) / 4; // 50px for gaps
-            document.documentElement.style.setProperty('--tile-size', `${tileSize}px`);
             document.querySelectorAll('.tile').forEach(tile => {
-                tile.style.width = `${tileSize}px`;
-                tile.style.height = `${tileSize}px`;
                 tile.style.fontSize = `${tileSize / 2}px`;
             });
         }
