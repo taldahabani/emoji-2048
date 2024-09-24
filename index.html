@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emoji 2048 Game</title>
     <style>
         body {
@@ -13,6 +13,7 @@
             height: 100vh;
             margin: 0;
             background-color: #faf8ef;
+            overflow: hidden;
         }
         #game-container {
             text-align: center;
@@ -28,6 +29,7 @@
             border-radius: 5px;
             padding: 10px;
             margin-bottom: 20px;
+            touch-action: none;
         }
         .tile {
             aspect-ratio: 1 / 1;
@@ -237,7 +239,12 @@
         gameBoard.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        });
+            e.preventDefault(); // Prevent default touch behavior
+        }, { passive: false });
+
+        gameBoard.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling when touch moving on the game board
+        }, { passive: false });
 
         gameBoard.addEventListener('touchend', (e) => {
             if (!touchStartX || !touchStartY) {
@@ -268,7 +275,8 @@
 
             touchStartX = null;
             touchStartY = null;
-        });
+            e.preventDefault(); // Prevent default touch behavior
+        }, { passive: false });
 
         initializeGame();
         newGame();
