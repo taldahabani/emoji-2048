@@ -18,10 +18,11 @@
         }
         #game-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 750px; /* Increased from 500px to 750px (1.5x) */
             padding: 20px;
             box-sizing: border-box;
-            margin-top: 10vh; /* Adjust this value to move the board higher or lower */
+            margin-top: 5vh; /* Adjusted to position the board higher */
+            position: relative;
         }
         h1 {
             text-align: center;
@@ -38,36 +39,34 @@
         #game-board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
+            gap: 15px; /* Increased from 10px to 15px */
             background-color: #bbada0;
-            border-radius: 6px;
-            padding: 10px;
+            border-radius: 9px; /* Increased from 6px to 9px */
+            padding: 15px; /* Increased from 10px to 15px */
             aspect-ratio: 1 / 1;
             width: 100%;
-            max-width: 500px;
+            max-width: 750px; /* Increased from 500px to 750px (1.5x) */
             margin: 0 auto;
             touch-action: none;
         }
         .tile {
             background-color: #cdc1b4;
-            border-radius: 3px;
+            border-radius: 4.5px; /* Increased from 3px to 4.5px */
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2em;
+            font-size: 3em; /* Increased from 2em to 3em */
             aspect-ratio: 1 / 1;
         }
-        #new-game-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            font-size: 1.2em;
-            background-color: #8f7a66;
-            color: white;
+        #restart-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            background: none;
             border: none;
-            border-radius: 3px;
             cursor: pointer;
-            margin-top: 20px;
+            color: #776e65;
         }
         #message {
             position: fixed;
@@ -86,10 +85,10 @@
 </head>
 <body>
     <div id="game-container">
+        <button id="restart-btn" onclick="newGame()">🔄</button>
         <h1>Emoji 2048</h1>
         <div id="score">Score: <span id="score-value">0</span></div>
         <div id="game-board"></div>
-        <button id="new-game-btn" onclick="newGame()">New Game</button>
     </div>
     <div id="message"></div>
 
@@ -115,7 +114,7 @@
         function resizeBoard() {
             const gameBoard = document.getElementById('game-board');
             const containerWidth = gameBoard.offsetWidth;
-            const tileSize = (containerWidth - 50) / 4; // 50px for gaps
+            const tileSize = (containerWidth - 75) / 4; // 75px for gaps (increased from 50px)
             document.querySelectorAll('.tile').forEach(tile => {
                 tile.style.fontSize = `${tileSize / 2}px`;
             });
