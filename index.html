@@ -5,54 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emoji 2048 Game</title>
     <style>
-        body {
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
+            background-color: #faf8ef;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #faf8ef;
             overflow: hidden;
         }
         #game-container {
-            text-align: center;
             width: 100%;
             max-width: 500px;
-            padding: 10px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #776e65;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        #score {
+            text-align: center;
+            font-size: 1.5em;
+            color: #776e65;
+            margin-bottom: 20px;
         }
         #game-board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            grid-gap: 10px;
+            gap: 10px;
             background-color: #bbada0;
-            border-radius: 5px;
+            border-radius: 6px;
             padding: 10px;
-            margin-bottom: 20px;
             touch-action: none;
         }
         .tile {
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 1;
             background-color: #cdc1b4;
             border-radius: 3px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 10vw;
-            max-font-size: 50px;
+            font-size: 2em;
         }
-        #score {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        button {
-            font-size: 18px;
-            padding: 10px 20px;
+        #new-game-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
             background-color: #8f7a66;
             color: white;
             border: none;
             border-radius: 3px;
             cursor: pointer;
+            margin-top: 20px;
+        }
+        #message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(238, 228, 218, 0.9);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 2em;
+            color: #776e65;
+            display: none;
         }
     </style>
 </head>
@@ -61,8 +84,9 @@
         <h1>Emoji 2048</h1>
         <div id="score">Score: <span id="score-value">0</span></div>
         <div id="game-board"></div>
-        <button onclick="newGame()">New Game</button>
+        <button id="new-game-btn" onclick="newGame()">New Game</button>
     </div>
+    <div id="message"></div>
 
     <script>
         const board = Array(4).fill().map(() => Array(4).fill(0));
@@ -80,6 +104,19 @@
                     gameBoard.appendChild(tile);
                 }
             }
+            resizeBoard();
+        }
+
+        function resizeBoard() {
+            const gameBoard = document.getElementById('game-board');
+            const containerWidth = gameBoard.offsetWidth;
+            const tileSize = (containerWidth - 50) / 4; // 50px for gaps
+            document.documentElement.style.setProperty('--tile-size', `${tileSize}px`);
+            document.querySelectorAll('.tile').forEach(tile => {
+                tile.style.width = `${tileSize}px`;
+                tile.style.height = `${tileSize}px`;
+                tile.style.fontSize = `${tileSize / 2}px`;
+            });
         }
 
         function updateBoard() {
@@ -193,8 +230,10 @@
                 board.splice(0, 4, ...newBoard);
                 addNewTile();
                 updateBoard();
-                if (isGameOver()) {
-                    alert('Game Over!');
+                if (checkWin()) {
+                    showMessage("You Win! 🎉");
+                } else if (isGameOver()) {
+                    showMessage("Game Over!");
                 }
             }
         }
@@ -210,6 +249,19 @@
             return true;
         }
 
+        function checkWin() {
+            return board.some(row => row.includes(2048));
+        }
+
+        function showMessage(msg) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = msg;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
         function newGame() {
             board.forEach(row => row.fill(0));
             score = 0;
@@ -217,6 +269,8 @@
             addNewTile();
             updateBoard();
         }
+
+        window.addEventListener('resize', resizeBoard);
 
         document.addEventListener('keydown', (e) => {
             const key = e.key;
@@ -232,24 +286,21 @@
             }
         });
 
-        // Touch event handling
         let touchStartX, touchStartY;
         const gameBoard = document.getElementById('game-board');
 
         gameBoard.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-            e.preventDefault(); // Prevent default touch behavior
+            e.preventDefault();
         }, { passive: false });
 
         gameBoard.addEventListener('touchmove', (e) => {
-            e.preventDefault(); // Prevent scrolling when touch moving on the game board
+            e.preventDefault();
         }, { passive: false });
 
         gameBoard.addEventListener('touchend', (e) => {
-            if (!touchStartX || !touchStartY) {
-                return;
-            }
+            if (!touchStartX || !touchStartY) return;
 
             let touchEndX = e.changedTouches[0].clientX;
             let touchEndY = e.changedTouches[0].clientY;
@@ -258,24 +309,14 @@
             let dy = touchEndY - touchStartY;
 
             if (Math.abs(dx) > Math.abs(dy)) {
-                // Horizontal swipe
-                if (dx > 0) {
-                    move('right');
-                } else {
-                    move('left');
-                }
+                move(dx > 0 ? 'right' : 'left');
             } else {
-                // Vertical swipe
-                if (dy > 0) {
-                    move('down');
-                } else {
-                    move('up');
-                }
+                move(dy > 0 ? 'down' : 'up');
             }
 
             touchStartX = null;
             touchStartY = null;
-            e.preventDefault(); // Prevent default touch behavior
+            e.preventDefault();
         }, { passive: false });
 
         initializeGame();
