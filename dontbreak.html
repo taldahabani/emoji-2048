@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do Not Break!</title>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .message-container {
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 60px;
+            width: 340px;
+        }
+        .message {
+            font-size: 18px;
+            color: #007AFF;
+            font-weight: bold;
+        }
+        .submessage {
+            font-size: 14px;
+            color: #888;
+        }
+        .game-wrapper {
+            width: 340px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .profile-bar {
+            background-color: #007AFF;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: #ffffff;
+        }
+        .crown {
+            font-size: 24px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #007AFF;
+            margin: 0 0 5px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+        }
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        #gameButton {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #007AFF;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        #gameButton:active {
+            transform: scale(0.95);
+        }
+        .best-score {
+            margin-top: 20px;
+            color: #888;
+        }
+        #animation-container {
+            position: absolute;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #animation-container lottie-player {
+            width: 900px;
+            height: 900px;
+        }
+    </style>
+</head>
+<body>
+    <div class="message-container">
+        <div class="message" id="mainMessage"></div>
+        <div class="submessage" id="subMessage"></div>
+    </div>
+    <div class="game-wrapper">
+        <div class="profile-bar">
+            <div style="display: flex; align-items: center;">
+                <div class="profile-pic"></div>
+                <span>Your next goal</span>
+            </div>
+            <span class="crown">👑</span>
+        </div>
+        <div class="container">
+            <h1>Do Not Break!</h1>
+            <div class="subtitle">Hold to keep the crown</div>
+            <div class="score" id="score">0</div>
+            <button id="gameButton"></button>
+            <div class="best-score">Your best score: <span id="bestScore">0</span></div>
+        </div>
+    </div>
+    <div id="animation-container">
+        <lottie-player src="https://lottie.host/f845509e-521d-4565-9a0c-cd48d46a8aa1/5QeeRAd7WZ.json" background="transparent" speed="1" loop autoplay></lottie-player>
+    </div>
+
+    <script>
+        const button = document.getElementById('gameButton');
+        const scoreDisplay = document.getElementById('score');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        const animationContainer = document.getElementById('animation-container');
+        const mainMessageEl = document.getElementById('mainMessage');
+        const subMessageEl = document.getElementById('subMessage');
+        let startTime;
+        let timerInterval;
+        let isHolding = false;
+        let bestScore = 0;
+
+        const messages = [
+            { main: "Ready to become a finger athlete?", sub: "Tap that button like it owes you money!" },
+            { main: "DO NOT RELEASE YOUR FINGER!", sub: "Your finger's having a party and quitting is NOT invited." },
+            { main: "Still hanging on? You rebel!", sub: "Your finger's writing history... or at least a very long sentence." },
+            { main: "Finger of steel, will of iron!", sub: "Is your finger married to that button? Should we call a priest?" },
+            { main: "You're officially finger-famous!", sub: "Your finger deserves its own social media account." },
+            { main: "Finger marathon champion!", sub: "Your finger could win a gold medal in 'not letting go'." },
+            { main: "LEGENDARY FINGER WARRIOR!", sub: "All hail the unbreakable, unstoppable finger of destiny!" },
+            { main: "Are you even human?", sub: "Scientists want to study your superhuman finger endurance." },
+            { main: "FINGER GOD MODE ACTIVATED", sub: "Your finger has transcended mortal limitations. Congratulations?" },
+            { main: "THE ETERNAL TAPPER", sub: "Legends say your finger is still tapping to this day..." },
+            { main: "MILLIONAIRE TAPPER!", sub: "You've tapped your way to finger fortune! Time to retire?" },
+            { main: "Beyond Infinity!", sub: "Your finger has broken the space-time continuum!" },
+            { main: "The Chosen One", sub: "Neo, is that you? The Matrix wants its glitch back." },
+            { main: "Finger of Fate", sub: "With great power comes great need for hand lotion." },
+            { main: "Time Bender", sub: "Did you start this game yesterday or last century?" },
+            { main: "Immortal Tapper", sub: "Empires rise and fall, but your tapping never stops!" }
+        ];
+
+        function getMessageIndex(score) {
+            if (score < 10000) {
+                return Math.floor(score / 1000) % messages.length;
+            } else if (score < 20000) {
+                return Math.floor(score / 1500) % messages.length;
+            } else {
+                return Math.floor(score / 2000) % messages.length;
+            }
+        }
+
+        function startTimer() {
+            if (!isHolding) {
+                isHolding = true;
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 10);
+                animationContainer.style.opacity = '1';
+            }
+        }
+
+        function stopTimer() {
+            if (isHolding) {
+                isHolding = false;
+                clearInterval(timerInterval);
+                animationContainer.style.opacity = '0';
+                updateBestScore();
+            }
+        }
+
+        function updateTimer() {
+            const elapsedTime = Date.now() - startTime;
+            const score = Math.floor(elapsedTime / 10);
+            scoreDisplay.textContent = score;
+            updateMessage(score);
+        }
+
+        function updateBestScore() {
+            const currentScore = parseInt(scoreDisplay.textContent);
+            if (currentScore > bestScore) {
+                bestScore = currentScore;
+                bestScoreDisplay.textContent = bestScore;
+                showConfetti();
+            }
+        }
+
+        function showConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function updateMessage(score) {
+            const index = getMessageIndex(score);
+            mainMessageEl.textContent = messages[index].main;
+            subMessageEl.textContent = messages[index].sub;
+        }
+
+        button.addEventListener('mousedown', startTimer);
+        button.addEventListener('mouseup', stopTimer);
+        button.addEventListener('mouseleave', stopTimer);
+
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startTimer();
+        });
+        button.addEventListener('touchend', stopTimer);
+        button.addEventListener('touchcancel', stopTimer);
+
+        // Initialize with the first message
+        updateMessage(0);
+    </script>
+</body>
+</html>
