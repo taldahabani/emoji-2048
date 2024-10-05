@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do Not Break!</title>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .game-wrapper {
+            width: 340px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .profile-bar {
+            background-color: #007AFF;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 15px;
+            background-color: #ffffff;
+        }
+        .crown {
+            font-size: 24px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #007AFF;
+            margin: 0 0 5px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+        }
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        #gameButton {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #007AFF;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        #gameButton:active {
+            transform: scale(0.95);
+        }
+        .best-score {
+            margin-top: 20px;
+            color: #888;
+        }
+        #animation-container {
+            position: absolute;
+            top: 50%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        #animation-container lottie-player {
+            width: 900px;
+            height: 900px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="profile-bar">
+            <div style="display: flex; align-items: center;">
+                <div class="profile-pic"></div>
+                <span>Your next goal</span>
+            </div>
+            <span class="crown">👑</span>
+        </div>
+        <div class="container">
+            <h1>Do Not Break!</h1>
+            <div class="subtitle">Hold to keep the crown</div>
+            <div class="score" id="score">0</div>
+            <button id="gameButton"></button>
+            <div class="best-score">Your best score: <span id="bestScore">0</span></div>
+        </div>
+    </div>
+    <div id="animation-container">
+        <lottie-player src="https://lottie.host/f845509e-521d-4565-9a0c-cd48d46a8aa1/5QeeRAd7WZ.json" background="transparent" speed="1" loop autoplay></lottie-player>
+    </div>
+
+    <script>
+        const button = document.getElementById('gameButton');
+        const scoreDisplay = document.getElementById('score');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        const animationContainer = document.getElementById('animation-container');
+        let startTime;
+        let timerInterval;
+        let isHolding = false;
+        let bestScore = 0;
+
+        function startTimer() {
+            if (!isHolding) {
+                isHolding = true;
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 10);
+                animationContainer.style.opacity = '1';
+            }
+        }
+
+        function stopTimer() {
+            if (isHolding) {
+                isHolding = false;
+                clearInterval(timerInterval);
+                animationContainer.style.opacity = '0';
+                updateBestScore();
+            }
+        }
+
+        function updateTimer() {
+            const elapsedTime = Date.now() - startTime;
+            scoreDisplay.textContent = Math.floor(elapsedTime / 10);
+        }
+
+        function updateBestScore() {
+            const currentScore = parseInt(scoreDisplay.textContent);
+            if (currentScore > bestScore) {
+                bestScore = currentScore;
+                bestScoreDisplay.textContent = bestScore;
+                showConfetti();
+            }
+        }
+
+        function showConfetti() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        button.addEventListener('mousedown', startTimer);
+        button.addEventListener('mouseup', stopTimer);
+        button.addEventListener('mouseleave', stopTimer);
+
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startTimer();
+        });
+        button.addEventListener('touchend', stopTimer);
+        button.addEventListener('touchcancel', stopTimer);
+    </script>
+</body>
+</html>
