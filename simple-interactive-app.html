@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive App with Lottie Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #colorButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #counter {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #animation-container {
+            margin-top: 20px;
+        }
+        iframe {
+            border: none;
+            width: 300px;
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to My Interactive App with Animation</h1>
+    <div id="animation-container">
+        <iframe src="https://lottie.host/embed/227d138d-b310-4e64-9370-eba95faa691f/JcV4wA9zrQ.json"></iframe>
+    </div>
+    <button id="colorButton">Change My Color</button>
+    <div id="counter">0</div>
+
+    <script>
+        const button = document.getElementById('colorButton');
+        const counterDisplay = document.getElementById('counter');
+        let count = 0;
+
+        button.addEventListener('click', function() {
+            const randomColor = Math.floor(Math.random()*16777215).toString(16);
+            this.style.backgroundColor = "#" + randomColor;
+            count++;
+            counterDisplay.textContent = count;
+        });
+    </script>
+</body>
+</html>
