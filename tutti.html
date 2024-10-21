@@ -21,6 +21,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
         }
         #video-background {
             height: 100%;
@@ -39,23 +40,26 @@
 </head>
 <body>
     <div class="video-container">
-        <video id="video-background" autoplay loop playsinline>
+        <video id="video-background" loop playsinline>
             <source src="Idle & Talk & Funny.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var video = document.getElementById('video-background');
+            var videoContainer = document.querySelector('.video-container');
             
-            // Attempt to play the video automatically
-            var playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log("Autoplay was prevented, but the video will play when it can");
+            function playVideo() {
+                video.play().catch(error => {
+                    console.log("Playback was prevented. Please try again.");
                 });
             }
+
+            videoContainer.addEventListener('click', playVideo);
+
+            // Attempt to play the video automatically (may not work due to browser policies)
+            playVideo();
         });
     </script>
 </body>
