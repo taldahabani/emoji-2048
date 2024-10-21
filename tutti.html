@@ -8,26 +8,24 @@
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
-            overflow: hidden;
-        }
-        .video-container {
-            position: fixed;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .video-container {
+            width: 100%;
+            height: auto;
             overflow: hidden;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             cursor: pointer;
         }
         #video-background {
-            width: 100vw; /* Always fit the width of the screen */
-            height: 177.78vw; /* Maintain 1080x1920 aspect ratio */
-            max-height: none; /* Allow video to grow beyond screen height */
-            object-fit: cover;
+            width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>
