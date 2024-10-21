@@ -24,13 +24,15 @@
             cursor: pointer;
         }
         #video-background {
-            min-height: 100%;
-            min-width: 100%;
-            object-fit: cover;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: cover;
         }
         .pointing-hand {
             position: absolute;
@@ -38,24 +40,24 @@
             z-index: 10;
         }
         .hand-top {
-            top: 20%; /* Moved closer to center */
+            top: 15%; /* Moved closer to center */
             left: 50%;
             transform: translate(-50%, -50%);
         }
         .hand-right {
             top: 50%;
-            right: 10%;
-            transform: translate(50%, -50%) rotate(90deg);
+            right: 5%;
+            transform: translate(-50%, -50%) rotate(270deg);
         }
         .hand-bottom {
-            bottom: 20%; /* Moved closer to center */
+            bottom: 15%; /* Moved closer to center */
             left: 50%;
             transform: translate(-50%, 50%) rotate(180deg);
         }
         .hand-left {
             top: 50%;
-            left: 10%;
-            transform: translate(-50%, -50%) rotate(270deg);
+            left: 5%;
+            transform: translate(-50%, -50%) rotate(90deg);
         }
     </style>
 </head>
