@@ -24,15 +24,9 @@
             cursor: pointer;
         }
         #video-background {
-            width: 100vw;
-            height: 177.78vw; /* 100 * 1920 / 1080 */
-            max-height: 100vh;
-            max-width: 56.25vh; /* 100 * 1080 / 1920 */
-            margin: auto;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            width: 100vw; /* Always fit the width of the screen */
+            height: 177.78vw; /* Maintain 1080x1920 aspect ratio */
+            max-height: none; /* Allow video to grow beyond screen height */
             object-fit: cover;
         }
     </style>
