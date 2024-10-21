@@ -36,14 +36,43 @@
                 height: auto;
             }
         }
+        .pointing-hand {
+            position: absolute;
+            font-size: 48px; /* Adjust size as needed */
+            z-index: 10;
+        }
+        .hand-top {
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+        .hand-right {
+            top: 50%;
+            right: 10%;
+            transform: translate(50%, -50%) rotate(270deg);
+        }
+        .hand-bottom {
+            bottom: 10%;
+            left: 50%;
+            transform: translate(-50%, 50%);
+        }
+        .hand-left {
+            top: 50%;
+            left: 10%;
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
     </style>
 </head>
 <body>
     <div class="video-container">
-        <video id="video-background" loop playsinline>
+        <video id="video-background" playsinline>
             <source src="Idle & Talk & Funny.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
+        <div class="pointing-hand hand-top">👇</div>
+        <div class="pointing-hand hand-right">👇</div>
+        <div class="pointing-hand hand-bottom">👇</div>
+        <div class="pointing-hand hand-left">👇</div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -51,12 +80,19 @@
             var videoContainer = document.querySelector('.video-container');
             
             function playVideo() {
+                video.currentTime = 0; // Reset video to start
                 video.play().catch(error => {
                     console.log("Playback was prevented. Please try again.");
                 });
             }
 
             videoContainer.addEventListener('click', playVideo);
+
+            // Remove loop attribute and add ended event listener
+            video.removeAttribute('loop');
+            video.addEventListener('ended', function() {
+                console.log("Video ended");
+            });
 
             // Attempt to play the video automatically (may not work due to browser policies)
             playVideo();
