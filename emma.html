@@ -55,7 +55,9 @@
     <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
-    <!-- ElevenLabs Convai Widget Script -->
+    <!-- Import the Conversation module first -->
+    <script src="https://elevenlabs.io/convai/lib/conversation.js"></script>
+    <!-- Then import the widget script -->
     <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
     <script>
@@ -75,12 +77,23 @@
             }
         }
 
-        // Wait for widget to be defined
-        customElements.whenDefined('elevenlabs-convai').then(() => {
-            logDebug('elevenlabs-convai defined');
-            const widget = document.querySelector('elevenlabs-convai');
+        // Wait for both the Conversation module and widget to be ready
+        window.addEventListener('load', async () => {
+            logDebug('Window loaded, waiting for widget...');
             
-            // Initialize conversation with client tools
+            // Make sure the Conversation module is available
+            if (!window.Conversation) {
+                console.error('Conversation module not loaded');
+                return;
+            }
+
+            const widget = document.querySelector('elevenlabs-convai');
+            if (!widget) {
+                console.error('Widget not found');
+                return;
+            }
+
+            // Wait for the widget to be ready
             widget.addEventListener('ready', async (event) => {
                 logDebug('Widget ready event received', event);
                 try {
@@ -89,17 +102,15 @@
                         throw new Error('No signed URL provided');
                     }
 
-                    window.switchBackground = async (parameters) => {
-                        logDebug('switchBackground called with parameters', parameters);
-                        handleBackgroundSwitch(parameters.speaking);
-                    };
-
-                    const conversation = await Conversation.startSession({
+                    // Initialize the conversation with the client tool
+                    const conversation = await window.Conversation.startSession({
                         signedUrl: signedUrl,
                         clientTools: {
                             switchBackground: async (parameters) => {
-                                logDebug('Client tool switchBackground called', parameters);
+                                logDebug('switchBackground called with parameters', parameters);
                                 handleBackgroundSwitch(parameters.speaking);
+                                // Return a value to acknowledge the tool was called
+                                return { success: true };
                             }
                         }
                     });
@@ -110,31 +121,12 @@
                 }
             });
 
-            // Manual event listeners for audio state
-            widget.addEventListener('audiostart', () => {
-                logDebug('audiostart event received');
-                handleBackgroundSwitch(true);
-            });
-
-            widget.addEventListener('audioend', () => {
-                logDebug('audioend event received');
-                handleBackgroundSwitch(false);
-            });
-            
             // Debug event listeners
             ['message', 'error', 'ready', 'speechstart', 'speechend', 'conversationstart', 'conversationend', 'statechange'].forEach(eventName => {
                 widget.addEventListener(eventName, (event) => {
                     logDebug(`Event: ${eventName} received`, event.detail);
                 });
             });
-        });
-
-        // Backup initialization after window load
-        window.addEventListener('load', () => {
-            logDebug('Window loaded');
-            if (!document.querySelector('elevenlabs-convai')) {
-                console.error('Widget not found after window load');
-            }
         });
     </script>
 </body>
