@@ -48,7 +48,6 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Debug overlay */
         #debugInfo {
             position: fixed;
             top: 10px;
@@ -59,7 +58,6 @@
             font-family: monospace;
             font-size: 12px;
             z-index: 9999;
-            display: none;
         }
 
         @media screen and (max-width: 768px) {
@@ -70,100 +68,83 @@
     </style>
 </head>
 <body>
-    <!-- Debug Info -->
     <div id="debugInfo"></div>
 
-    <!-- Default Background -->
     <div class="background-container" id="defaultBg">
-        <img class="background-image" src="./emma.png" alt="Emma Background" onload="logImageLoad('emma.png')" onerror="logImageError('emma.png')">
+        <img class="background-image" src="emma.png" alt="Emma Background">
     </div>
 
-    <!-- Speaking Background -->
     <div class="background-container hidden" id="speakingBg">
-        <img class="background-image" src="./emma2.png" alt="Emma Speaking Background" onload="logImageLoad('emma2.png')" onerror="logImageError('emma2.png')">
+        <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
-    <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ"
-        client-events='["audio", "interruption"]'>
+        client-events='["audio", "interruption", "connection"]'
+        onAudioStart="handleAudioStart()"
+        onAudioEnd="handleAudioEnd()"
+        onConnectionUpdate="handleConnectionUpdate(event)">
     </elevenlabs-convai>
     
-    <!-- ElevenLabs Convai Widget Script -->
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
-        // Enable debug mode
-        const DEBUG = true;
+        const defaultBg = document.getElementById('defaultBg');
+        const speakingBg = document.getElementById('speakingBg');
         const debugInfo = document.getElementById('debugInfo');
-        if (DEBUG) debugInfo.style.display = 'block';
 
         function log(message) {
-            if (DEBUG) {
-                console.log(message);
-                debugInfo.innerHTML += message + '<br>';
-                // Keep only last 5 messages
-                const lines = debugInfo.innerHTML.split('<br>');
-                if (lines.length > 5) {
-                    debugInfo.innerHTML = lines.slice(-5).join('<br>');
-                }
+            console.log(message);
+            debugInfo.innerHTML += message + '<br>';
+            if (debugInfo.innerHTML.split('<br>').length > 5) {
+                debugInfo.innerHTML = debugInfo.innerHTML.split('<br>').slice(-5).join('<br>');
             }
         }
 
-        function logImageLoad(imageName) {
-            log(`✅ ${imageName} loaded successfully`);
+        // Direct event handlers
+        function handleAudioStart() {
+            log('🎤 Audio Start');
+            defaultBg.classList.add('hidden');
+            speakingBg.classList.remove('hidden');
         }
 
-        function logImageError(imageName) {
-            log(`❌ Error loading ${imageName}`);
+        function handleAudioEnd() {
+            log('🔇 Audio End');
+            defaultBg.classList.remove('hidden');
+            speakingBg.classList.add('hidden');
         }
 
+        function handleConnectionUpdate(event) {
+            log(`🔌 Connection Update: ${event.detail}`);
+        }
+
+        // Add custom event listeners
         document.addEventListener('DOMContentLoaded', () => {
-            const defaultBg = document.getElementById('defaultBg');
-            const speakingBg = document.getElementById('speakingBg');
+            const widget = document.getElementById('convai-widget');
             
-            // Check if elements are found
-            if (!defaultBg || !speakingBg) {
-                log('❌ Background elements not found!');
-                return;
+            if (widget) {
+                // Add direct event listeners to the widget
+                widget.addEventListener('audioStart', handleAudioStart);
+                widget.addEventListener('audioEnd', handleAudioEnd);
+                
+                log('✅ Widget event listeners added');
             }
 
-            log('✅ Background elements found');
-
-            function switchToSpeaking() {
-                defaultBg.classList.add('hidden');
-                speakingBg.classList.remove('hidden');
-                log('🎤 Switched to speaking background');
-            }
-
-            function switchToDefault() {
-                defaultBg.classList.remove('hidden');
-                speakingBg.classList.add('hidden');
-                log('🔇 Switched to default background');
-            }
-
-            // Listen for custom events from the widget
+            // Also listen for message events
             window.addEventListener('message', (event) => {
-                if (event.data.type === 'elevenlabs-convai') {
-                    log(`📨 Event received: ${event.data.event}`);
+                if (event.data && event.data.type === 'elevenlabs-convai') {
+                    log(`📨 Message Event: ${JSON.stringify(event.data)}`);
                     
-                    switch (event.data.event) {
-                        case 'audio-start':
-                        case 'audio-playing':
-                            switchToSpeaking();
-                            break;
-                            
-                        case 'audio-end':
-                        case 'audio-stopped':
-                        case 'interruption':
-                            switchToDefault();
-                            break;
+                    if (event.data.event === 'audio-playing') {
+                        handleAudioStart();
+                    } else if (event.data.event === 'audio-stopped') {
+                        handleAudioEnd();
                     }
                 }
             });
 
-            log('✅ Event listeners initialized');
+            log('✅ Setup complete');
         });
     </script>
 </body>
