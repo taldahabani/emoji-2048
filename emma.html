@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emma AI Assistant</title>
     <style>
-        /* Previous styles remain unchanged */
         body, html {
             margin: 0;
             padding: 0;
@@ -49,7 +48,7 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Enhanced debug panel */
+        /* Enhanced Debug Panel */
         #debugPanel {
             position: fixed;
             top: 10px;
@@ -61,55 +60,96 @@
             font-size: 12px;
             z-index: 9999;
             max-width: 500px;
-            max-height: 400px;
+            max-height: 80vh;
             overflow-y: auto;
             border-radius: 5px;
             border: 1px solid #00ff00;
         }
 
-        .event-client {
-            color: #00ffff;
+        .event-client { color: #00ffff; }
+        .event-audio { color: #ff00ff; }
+        .event-background { color: #ffff00; }
+        .event-error { color: #ff0000; }
+        .event-init { color: #00ff00; }
+        .event-widget { color: #ffa500; }
+
+        /* Debug Controls */
+        #debugControls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
         }
 
-        .event-background {
-            color: #ffff00;
-        }
-
-        .event-error {
-            color: #ff0000;
+        .debug-button {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 5px 10px;
+            margin: 2px;
+            cursor: pointer;
+            border-radius: 3px;
         }
     </style>
 </head>
 <body>
+    <!-- Debug Panel and Controls -->
     <div id="debugPanel"></div>
+    <div id="debugControls">
+        <button class="debug-button" onclick="clearDebug()">Clear Debug</button>
+        <button class="debug-button" onclick="toggleDebug()">Toggle Debug</button>
+    </div>
 
+    <!-- Background Images -->
     <div class="background-container" id="defaultBg">
-        <img class="background-image" src="emma.png" alt="Emma Background">
+        <img class="background-image" src="emma.png" alt="Emma Background" onload="logImageLoad('emma.png')" onerror="logImageError('emma.png')">
     </div>
 
     <div class="background-container hidden" id="speakingBg">
-        <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
+        <img class="background-image" src="emma2.png" alt="Emma Speaking Background" onload="logImageLoad('emma2.png')" onerror="logImageError('emma2.png')">
     </div>
 
-    <!-- Updated widget configuration -->
+    <!-- ElevenLabs Widget with all possible events -->
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ"
-        client-events='["switchBackground", "audio"]'>
+        client-events='["switchBackground", "audio", "interruption", "connection", "message", "error"]'>
     </elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
+        // Debug Elements
         const debugPanel = document.getElementById('debugPanel');
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
-        
+
+        // State Management
         let currentState = {
             speaking: false,
             lastEventTime: Date.now(),
-            currentBackground: 'emma.png'
+            currentBackground: 'emma.png',
+            audioPlaying: false,
+            lastAudioEvent: null
         };
+
+        // Debug Functions
+        function clearDebug() {
+            debugPanel.innerHTML = '';
+            log('INIT', 'Debug cleared');
+        }
+
+        function toggleDebug() {
+            debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function logImageLoad(imageName) {
+            log('INIT', `✅ Image loaded: ${imageName}`);
+        }
+
+        function logImageError(imageName) {
+            log('ERROR', `❌ Image failed to load: ${imageName}`);
+        }
 
         function log(type, message, data = null) {
             const time = new Date().toLocaleTimeString();
@@ -136,6 +176,7 @@
             console.log(`[${time}] [${type}]`, message, data || '');
         }
 
+        // Background Switching
         function switchBackground(speaking) {
             const newState = speaking ? 'emma2.png' : 'emma.png';
             
@@ -155,6 +196,7 @@
                 }
                 
                 currentState = {
+                    ...currentState,
                     speaking: speaking,
                     lastEventTime: Date.now(),
                     currentBackground: newState
@@ -164,27 +206,37 @@
             }
         }
 
-        // Listen for client tool events
+        // Event Listeners
         window.addEventListener('message', (event) => {
             if (event.data.type === 'elevenlabs-convai') {
                 log('CLIENT', 'Received client event', event.data);
-
-                if (event.data.event === 'switchBackground') {
-                    const speaking = event.data.detail?.speaking;
-                    log('CLIENT', 'Received switchBackground command', {
-                        speaking: speaking,
-                        detail: event.data.detail
-                    });
-                    switchBackground(speaking);
+                switch (event.data.event) {
+                    case 'switchBackground':
+                        const speaking = event.data.detail?.speaking;
+                        log('CLIENT', 'Received switchBackground command', {
+                            speaking: speaking,
+                            detail: event.data.detail
+                        });
+                        switchBackground(speaking);
+                        break;
+                    case 'audio':
+                        const audioEvent = event.data.detail;
+                        log('CLIENT', 'Received audio event', audioEvent);
+                        if (audioEvent.interruption) {
+                            log('AUDIO', 'Audio interruption detected', audioEvent);
+                            switchBackground(false);
+                        }
+                        break;
+                    default:
+                        log('CLIENT', 'Unhandled event type', event.data.event);
                 }
             }
         });
 
-        // Initialize monitoring
+        // Initialization
         document.addEventListener('DOMContentLoaded', () => {
-            log('INIT', 'Page loaded, starting monitoring');
-
-            // Check if widget is properly configured
+            log('INIT', 'Page loaded, initializing...');
+            
             const widget = document.getElementById('convai-widget');
             if (widget) {
                 log('INIT', 'Widget found', {
@@ -198,7 +250,7 @@
             }
         });
 
-        // Monitor widget state changes
+        // Widget State Monitor
         const widgetObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 log('WIDGET', 'Widget state changed', {
@@ -209,7 +261,7 @@
             });
         });
 
-        // Start observing widget once it's available
+        // Start widget observation
         const checkWidget = setInterval(() => {
             const widget = document.getElementById('convai-widget');
             if (widget) {
