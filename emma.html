@@ -29,7 +29,6 @@
             object-position: center;
             max-width: 100vw;
             max-height: 100vh;
-            transition: opacity 0.3s ease;
         }
         elevenlabs-convai {
             position: fixed;
@@ -37,8 +36,9 @@
             left: 0;
             width: 100%;
             z-index: 1;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: env(safe-area-inset-bottom); /* For devices with bottom bars /
         }
+        / Additional mobile optimizations */
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
@@ -47,33 +47,14 @@
     </style>
 </head>
 <body>
+    <!-- Background Container -->
     <div class="background-container">
-        <img id="backgroundImage" class="background-image" src="./emma.png" alt="Emma Background">
+        <img class="background-image" src="./emma.png" alt="Emma Background">
     </div>
-    
+    <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
-    
+
+    <!-- ElevenLabs Convai Widget Script -->
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
-    <script>
-        window.addEventListener('load', async () => {
-            try {
-                const conversation = await Conversation.startSession({
-                    signedUrl: signedUrl,
-                    clientTools: {
-                        switchbackground: async (parameters) => {
-                            const bgImage = document.getElementById('backgroundImage');
-                            if (parameters.speaking) {
-                                bgImage.src = './emma2.png';
-                            } else {
-                                bgImage.src = './emma.png';
-                            }
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error('Error starting conversation:', error);
-            }
-        });
-    </script>
 </body>
 </html>
