@@ -56,7 +56,7 @@
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
     <!-- Import the Conversation module first -->
-    <script src="https://elevenlabs.io/convai/lib/conversation.js"></script>
+    <script src="https://elevenlabs.io/convai/lib/conversational.js"></script>
     <!-- Then import the widget script -->
     <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
@@ -82,10 +82,12 @@
             logDebug('Window loaded, waiting for widget...');
             
             // Make sure the Conversation module is available
-            if (!window.Conversation) {
+            if (!window.Conversation && !window.conversational) {
                 console.error('Conversation module not loaded');
                 return;
             }
+
+            const ConversationModule = window.Conversation || window.conversational;
 
             const widget = document.querySelector('elevenlabs-convai');
             if (!widget) {
@@ -103,7 +105,7 @@
                     }
 
                     // Initialize the conversation with the client tool
-                    const conversation = await window.Conversation.startSession({
+                    const conversation = await ConversationModule.startSession({
                         signedUrl: signedUrl,
                         clientTools: {
                             switchBackground: async (parameters) => {
