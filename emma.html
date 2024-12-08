@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://elevenlabs.io 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
     <title>Emma AI Assistant</title>
     <style>
+        /* Base styles */
         body, html {
             margin: 0;
             padding: 0;
@@ -55,80 +57,75 @@
     <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
-    <!-- Import the Conversation module first -->
-    <script src="https://elevenlabs.io/convai/lib/conversational.js"></script>
-    <!-- Then import the widget script -->
-    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
+    <!-- Import scripts -->
+    <script src="https://elevenlabs.io/convai/lib/conversational.js" defer></script>
+    <script src="https://elevenlabs.io/convai-widget/index.js" defer></script>
 
     <script>
-        // Debug logging function
-        function logDebug(message, data) {
-            console.log(`[Debug] ${message}`, data);
-        }
-
-        // Function to switch background
-        function handleBackgroundSwitch(speaking) {
-            logDebug('Switching background', { speaking });
-            const backgroundImage = document.getElementById('backgroundImage');
-            if (backgroundImage) {
-                const newSrc = speaking ? './emma2.png' : './emma.png';
-                logDebug('Setting new image source', { newSrc });
-                backgroundImage.src = newSrc;
-            }
-        }
-
-        // Wait for both the Conversation module and widget to be ready
-        window.addEventListener('load', async () => {
-            logDebug('Window loaded, waiting for widget...');
+        // Create a safe function to handle background switching
+        const backgroundHandler = {
+            logDebug: function(message, data) {
+                console.log(`[Debug] ${message}`, data);
+            },
             
-            // Make sure the Conversation module is available
-            if (!window.Conversation && !window.conversational) {
-                console.error('Conversation module not loaded');
-                return;
+            handleBackgroundSwitch: function(speaking) {
+                this.logDebug('Switching background', { speaking });
+                const backgroundImage = document.getElementById('backgroundImage');
+                if (backgroundImage) {
+                    const newSrc = speaking ? './emma2.png' : './emma.png';
+                    this.logDebug('Setting new image source', { newSrc });
+                    backgroundImage.src = newSrc;
+                }
             }
+        };
 
-            const ConversationModule = window.Conversation || window.conversational;
-
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            backgroundHandler.logDebug('DOM loaded, setting up widget...');
+            
             const widget = document.querySelector('elevenlabs-convai');
             if (!widget) {
                 console.error('Widget not found');
                 return;
             }
 
-            // Wait for the widget to be ready
-            widget.addEventListener('ready', async (event) => {
-                logDebug('Widget ready event received', event);
+            // Set up widget event listeners
+            widget.addEventListener('ready', async function(event) {
+                backgroundHandler.logDebug('Widget ready event received', event);
                 try {
                     const signedUrl = event.detail?.signedUrl;
                     if (!signedUrl) {
                         throw new Error('No signed URL provided');
                     }
 
-                    // Initialize the conversation with the client tool
-                    const conversation = await ConversationModule.startSession({
+                    if (typeof window.conversational?.startSession !== 'function') {
+                        throw new Error('Conversation module not properly loaded');
+                    }
+
+                    const conversation = await window.conversational.startSession({
                         signedUrl: signedUrl,
                         clientTools: {
-                            switchBackground: async (parameters) => {
-                                logDebug('switchBackground called with parameters', parameters);
-                                handleBackgroundSwitch(parameters.speaking);
-                                // Return a value to acknowledge the tool was called
+                            switchBackground: async function(parameters) {
+                                backgroundHandler.logDebug('switchBackground called', parameters);
+                                backgroundHandler.handleBackgroundSwitch(parameters.speaking);
                                 return { success: true };
                             }
                         }
                     });
                     
-                    logDebug('Conversation session started successfully');
+                    backgroundHandler.logDebug('Conversation session started successfully');
                 } catch (error) {
-                    console.error('Error during initialization:', error);
+                    console.error('Initialization error:', error);
                 }
             });
 
             // Debug event listeners
-            ['message', 'error', 'ready', 'speechstart', 'speechend', 'conversationstart', 'conversationend', 'statechange'].forEach(eventName => {
-                widget.addEventListener(eventName, (event) => {
-                    logDebug(`Event: ${eventName} received`, event.detail);
+            ['message', 'error', 'ready', 'speechstart', 'speechend', 'conversationstart', 'conversationend', 'statechange']
+                .forEach(function(eventName) {
+                    widget.addEventListener(eventName, function(event) {
+                        backgroundHandler.logDebug(`Event: ${eventName}`, event.detail);
+                    });
                 });
-            });
         });
     </script>
 </body>
