@@ -81,10 +81,7 @@
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ"
-        client-events='["audio", "interruption", "connection"]'
-        onAudioStart="handleAudioStart()"
-        onAudioEnd="handleAudioEnd()"
-        onConnectionUpdate="handleConnectionUpdate(event)">
+        client-events='["switchBackground"]'>
     </elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
@@ -102,50 +99,29 @@
             }
         }
 
-        // Direct event handlers
-        function handleAudioStart() {
-            log('🎤 Audio Start');
-            defaultBg.classList.add('hidden');
-            speakingBg.classList.remove('hidden');
-        }
-
-        function handleAudioEnd() {
-            log('🔇 Audio End');
-            defaultBg.classList.remove('hidden');
-            speakingBg.classList.add('hidden');
-        }
-
-        function handleConnectionUpdate(event) {
-            log(`🔌 Connection Update: ${event.detail}`);
-        }
-
-        // Add custom event listeners
-        document.addEventListener('DOMContentLoaded', () => {
-            const widget = document.getElementById('convai-widget');
-            
-            if (widget) {
-                // Add direct event listeners to the widget
-                widget.addEventListener('audioStart', handleAudioStart);
-                widget.addEventListener('audioEnd', handleAudioEnd);
-                
-                log('✅ Widget event listeners added');
+        function switchBackground(speaking) {
+            log(`🎤 Switching background: ${speaking ? 'speaking' : 'not speaking'}`);
+            if (speaking) {
+                defaultBg.classList.add('hidden');
+                speakingBg.classList.remove('hidden');
+            } else {
+                defaultBg.classList.remove('hidden');
+                speakingBg.classList.add('hidden');
             }
+        }
 
-            // Also listen for message events
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'elevenlabs-convai') {
-                    log(`📨 Message Event: ${JSON.stringify(event.data)}`);
-                    
-                    if (event.data.event === 'audio-playing') {
-                        handleAudioStart();
-                    } else if (event.data.event === 'audio-stopped') {
-                        handleAudioEnd();
-                    }
+        // Listen for custom events from the widget
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'elevenlabs-convai') {
+                log(`📨 Event received: ${JSON.stringify(event.data)}`);
+                
+                if (event.data.event === 'switchBackground') {
+                    switchBackground(event.data.detail.speaking);
                 }
-            });
-
-            log('✅ Setup complete');
+            }
         });
+
+        log('✅ Setup complete');
     </script>
 </body>
 </html>
