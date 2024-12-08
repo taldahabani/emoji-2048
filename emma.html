@@ -29,6 +29,7 @@
             object-position: center;
             max-width: 100vw;
             max-height: 100vh;
+            transition: opacity 0.3s ease;
         }
         elevenlabs-convai {
             position: fixed;
@@ -38,47 +39,17 @@
             z-index: 1;
             padding-bottom: env(safe-area-inset-bottom);
         }
-        #debug-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            width: 300px;
-            max-height: 400px;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            font-family: monospace;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-y: auto;
-            z-index: 2;
-        }
-        .debug-entry {
-            margin-bottom: 8px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 8px;
-        }
-        .timestamp {
-            color: #888;
-            font-size: 0.8em;
-        }
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
-            }
-            #debug-panel {
-                width: 200px;
-                max-height: 200px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Debug Panel -->
-    <div id="debug-panel"></div>
-
     <!-- Background Container -->
     <div class="background-container">
-        <img class="background-image" src="./emma.png" alt="Emma Background">
+        <img id="backgroundImage" class="background-image" src="./emma.png" alt="Emma Background">
     </div>
 
     <!-- ElevenLabs Convai Widget -->
@@ -88,92 +59,50 @@
     <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
     <script>
-        const debugPanel = document.getElementById('debug-panel');
-        
-        function logEvent(event) {
-            const entry = document.createElement('div');
-            entry.className = 'debug-entry';
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const eventName = event.type;
-            const eventData = JSON.stringify(event.detail || {}, null, 2);
-            
-            entry.innerHTML = `
-                <span class="timestamp">[${timestamp}]</span><br>
-                Event: ${eventName}<br>
-                Data: ${eventData}
-            `;
-            
-            debugPanel.insertBefore(entry, debugPanel.firstChild);
-            
-            // Keep only last 50 entries
-            while (debugPanel.children.length > 50) {
-                debugPanel.removeChild(debugPanel.lastChild);
-            }
-            
-            // Also log to console
-            console.log(`Event: ${eventName}`, event);
+        // Function to switch background
+        function switchBackground(speaking) {
+            const backgroundImage = document.getElementById('backgroundImage');
+            backgroundImage.src = speaking ? './emma2.png' : './emma.png';
         }
 
-        function setupEventListeners() {
-            // Log initial setup attempt
-            logEvent({ type: 'debug', detail: { message: 'Setting up event listeners' } });
-            
+        // Wait for widget to be defined
+        customElements.whenDefined('elevenlabs-convai').then(() => {
             const widget = document.querySelector('elevenlabs-convai');
-            if (!widget) {
-                logEvent({ type: 'error', detail: { message: 'Widget not found' } });
-                return;
-            }
-
-            // List of events to listen for
-            const events = [
-                'message',
-                'error',
-                'ready',
-                'audiostart',
-                'audioend',
-                'speechstart',
-                'speechend',
-                'conversationstart',
-                'conversationend',
-                'statechange',  // Added statechange event
-                'input',        // Added input event
-                'output'        // Added output event
-            ];
             
-            // Add listeners for each event
+            // Initialize conversation with client tools
+            widget.addEventListener('ready', async (event) => {
+                const signedUrl = event.detail?.signedUrl;
+                if (signedUrl) {
+                    try {
+                        const conversation = await Conversation.startSession({
+                            signedUrl: signedUrl,
+                            clientTools: {
+                                switchBackground: async (parameters) => {
+                                    switchBackground(parameters.speaking);
+                                }
+                            }
+                        });
+                        
+                        // Log successful initialization
+                        console.log('Conversation session started successfully');
+                    } catch (error) {
+                        console.error('Error starting conversation:', error);
+                    }
+                }
+            });
+
+            // Listen for audio events to switch background
+            widget.addEventListener('audiostart', () => switchBackground(true));
+            widget.addEventListener('audioend', () => switchBackground(false));
+            
+            // Additional event listeners for debugging
+            const events = ['message', 'error', 'ready', 'speechstart', 'speechend', 'conversationstart', 'conversationend'];
             events.forEach(eventName => {
                 widget.addEventListener(eventName, (event) => {
-                    logEvent(event);
+                    console.log(`Event: ${eventName}`, event.detail);
                 });
-                logEvent({ type: 'debug', detail: { message: `Added listener for ${eventName}` } });
             });
-        }
-
-        // Try multiple approaches to ensure we catch the widget initialization
-        // 1. Wait for custom element to be defined
-        customElements.whenDefined('elevenlabs-convai').then(() => {
-            logEvent({ type: 'debug', detail: { message: 'Custom element defined' } });
-            setupEventListeners();
         });
-
-        // 2. Wait for DOM content to be loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            logEvent({ type: 'debug', detail: { message: 'DOM content loaded' } });
-            setupEventListeners();
-        });
-
-        // 3. Wait for window load
-        window.addEventListener('load', () => {
-            logEvent({ type: 'debug', detail: { message: 'Window loaded' } });
-            setupEventListeners();
-        });
-
-        // 4. Try after a short delay
-        setTimeout(() => {
-            logEvent({ type: 'debug', detail: { message: 'Delayed setup' } });
-            setupEventListeners();
-        }, 2000);
     </script>
 </body>
 </html>
