@@ -22,6 +22,7 @@
             height: 100%;
             z-index: -1;
             background-color: #000;
+            transition: opacity 0.3s ease; /* Smooth transition between backgrounds */
         }
 
         .background-image {
@@ -33,16 +34,19 @@
             max-height: 100vh;
         }
 
+        .hidden {
+            opacity: 0;
+        }
+
         elevenlabs-convai {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
             z-index: 1;
-            padding-bottom: env(safe-area-inset-bottom); /* For devices with bottom bars */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* Additional mobile optimizations */
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
@@ -51,15 +55,58 @@
     </style>
 </head>
 <body>
-    <!-- Background Container -->
-    <div class="background-container">
+    <!-- Default Background -->
+    <div class="background-container" id="defaultBg">
         <img class="background-image" src="./emma.png" alt="Emma Background">
     </div>
 
+    <!-- Speaking Background -->
+    <div class="background-container hidden" id="speakingBg">
+        <img class="background-image" src="./emma2.png" alt="Emma Speaking Background">
+    </div>
+
     <!-- ElevenLabs Convai Widget -->
-    <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
+    <elevenlabs-convai 
+        agent-id="UFCiWykxf7I8pgANcBuJ"
+        onAudioPlay="handleAudioPlay()"
+        onAudioEnd="handleAudioEnd()"
+        onInterruption="handleInterruption()">
+    </elevenlabs-convai>
     
     <!-- ElevenLabs Convai Widget Script -->
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
+
+    <script>
+        // Get background elements
+        const defaultBg = document.getElementById('defaultBg');
+        const speakingBg = document.getElementById('speakingBg');
+
+        // Event handlers
+        function handleAudioPlay() {
+            defaultBg.classList.add('hidden');
+            speakingBg.classList.remove('hidden');
+        }
+
+        function handleAudioEnd() {
+            defaultBg.classList.remove('hidden');
+            speakingBg.classList.add('hidden');
+        }
+
+        function handleInterruption() {
+            // Return to default background when interrupted
+            defaultBg.classList.remove('hidden');
+            speakingBg.classList.add('hidden');
+        }
+
+        // Initialize widget events
+        window.addEventListener('load', () => {
+            const widget = document.querySelector('elevenlabs-convai');
+            if (widget) {
+                widget.addEventListener('audioPlay', handleAudioPlay);
+                widget.addEventListener('audioEnd', handleAudioEnd);
+                widget.addEventListener('interruption', handleInterruption);
+            }
+        });
+    </script>
 </body>
 </html>
