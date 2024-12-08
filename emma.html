@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emma AI Assistant</title>
     <style>
-        /* Previous styles remain the same */
+        /* Previous styles remain unchanged */
         body, html {
             margin: 0;
             padding: 0;
@@ -49,21 +49,34 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
+        /* Enhanced debug panel */
         #debugPanel {
             position: fixed;
             top: 10px;
             left: 10px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             color: #00ff00;
             padding: 15px;
             font-family: monospace;
             font-size: 12px;
             z-index: 9999;
-            max-width: 400px;
-            max-height: 300px;
+            max-width: 500px;
+            max-height: 400px;
             overflow-y: auto;
             border-radius: 5px;
             border: 1px solid #00ff00;
+        }
+
+        .event-client {
+            color: #00ffff;
+        }
+
+        .event-background {
+            color: #ffff00;
+        }
+
+        .event-error {
+            color: #ff0000;
         }
     </style>
 </head>
@@ -78,9 +91,11 @@
         <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
+    <!-- Updated widget configuration -->
     <elevenlabs-convai 
         id="convai-widget" 
-        agent-id="UFCiWykxf7I8pgANcBuJ">
+        agent-id="UFCiWykxf7I8pgANcBuJ"
+        client-events='["switchBackground", "audio"]'>
     </elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
@@ -90,41 +105,47 @@
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
         
-        // State tracking
-        let currentlyPlaying = false;
-        let lastStateChange = Date.now();
-        const DEBOUNCE_TIME = 300; // ms to wait before allowing another state change
+        let currentState = {
+            speaking: false,
+            lastEventTime: Date.now(),
+            currentBackground: 'emma.png'
+        };
 
         function log(type, message, data = null) {
             const time = new Date().toLocaleTimeString();
-            console.log(`[${time}] [${type}]`, message, data || '');
-            
             const entry = document.createElement('div');
-            entry.style.borderBottom = '1px solid #333';
-            entry.style.marginBottom = '5px';
-            entry.style.paddingBottom = '5px';
+            entry.className = `event-${type.toLowerCase()}`;
+            
+            let dataStr = '';
+            if (data) {
+                try {
+                    dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+                } catch (e) {
+                    dataStr = '[Complex Object]';
+                }
+            }
+
             entry.innerHTML = `
                 <span style="color: #888">[${time}]</span>
                 <span style="color: #ff9900">[${type}]</span>
                 <span>${message}</span>
-                ${data ? `<br><span style="color: #888">${JSON.stringify(data)}</span>` : ''}
+                ${dataStr ? `<br><span style="color: #888">${dataStr}</span>` : ''}
             `;
             
             debugPanel.insertBefore(entry, debugPanel.firstChild);
-            if (debugPanel.children.length > 50) debugPanel.removeChild(debugPanel.lastChild);
+            console.log(`[${time}] [${type}]`, message, data || '');
         }
 
         function switchBackground(speaking) {
-            // Prevent rapid switching
-            const now = Date.now();
-            if (now - lastStateChange < DEBOUNCE_TIME) return;
+            const newState = speaking ? 'emma2.png' : 'emma.png';
             
-            // Only switch if state actually changed
-            if (speaking !== currentlyPlaying) {
-                log('BACKGROUND', `Switching to ${speaking ? 'speaking' : 'default'} background`);
-                currentlyPlaying = speaking;
-                lastStateChange = now;
+            log('BACKGROUND', `Attempt to switch background`, {
+                speaking: speaking,
+                currentState: currentState,
+                newBackground: newState
+            });
 
+            if (currentState.currentBackground !== newState) {
                 if (speaking) {
                     defaultBg.classList.add('hidden');
                     speakingBg.classList.remove('hidden');
@@ -132,71 +153,75 @@
                     defaultBg.classList.remove('hidden');
                     speakingBg.classList.add('hidden');
                 }
+                
+                currentState = {
+                    speaking: speaking,
+                    lastEventTime: Date.now(),
+                    currentBackground: newState
+                };
+
+                log('BACKGROUND', 'Background switched successfully', currentState);
             }
         }
 
-        function setupAudioListeners(audioElement) {
-            log('AUDIO', 'Setting up listeners for audio element');
+        // Listen for client tool events
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'elevenlabs-convai') {
+                log('CLIENT', 'Received client event', event.data);
 
-            audioElement.addEventListener('play', () => {
-                log('AUDIO', 'Play event detected');
-                switchBackground(true);
-            });
+                if (event.data.event === 'switchBackground') {
+                    const speaking = event.data.detail?.speaking;
+                    log('CLIENT', 'Received switchBackground command', {
+                        speaking: speaking,
+                        detail: event.data.detail
+                    });
+                    switchBackground(speaking);
+                }
+            }
+        });
 
-            audioElement.addEventListener('pause', () => {
-                log('AUDIO', 'Pause event detected');
-                switchBackground(false);
-            });
+        // Initialize monitoring
+        document.addEventListener('DOMContentLoaded', () => {
+            log('INIT', 'Page loaded, starting monitoring');
 
-            audioElement.addEventListener('ended', () => {
-                log('AUDIO', 'End event detected');
-                switchBackground(false);
-            });
-        }
-
-        function observeWidget() {
+            // Check if widget is properly configured
             const widget = document.getElementById('convai-widget');
-            if (!widget) return;
+            if (widget) {
+                log('INIT', 'Widget found', {
+                    attributes: Array.from(widget.attributes).map(attr => ({
+                        name: attr.name,
+                        value: attr.value
+                    }))
+                });
+            } else {
+                log('ERROR', 'Widget not found in DOM');
+            }
+        });
 
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.addedNodes.length) {
-                        mutation.addedNodes.forEach((node) => {
-                            if (node.tagName === 'AUDIO') {
-                                setupAudioListeners(node);
-                            }
-                            // Check for audio elements in subtree
-                            if (node.querySelectorAll) {
-                                node.querySelectorAll('audio').forEach(setupAudioListeners);
-                            }
-                        });
-                    }
+        // Monitor widget state changes
+        const widgetObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                log('WIDGET', 'Widget state changed', {
+                    type: mutation.type,
+                    target: mutation.target.nodeName,
+                    attributeName: mutation.attributeName
                 });
             });
-
-            observer.observe(widget, {
-                childList: true,
-                subtree: true
-            });
-
-            // Gentle periodic check
-            setInterval(() => {
-                if (!document.getElementsByTagName('audio').length) return;
-                
-                const anyPlaying = Array.from(document.getElementsByTagName('audio'))
-                    .some(audio => !audio.paused && audio.currentTime > 0);
-                
-                if (anyPlaying !== currentlyPlaying) {
-                    switchBackground(anyPlaying);
-                }
-            }, 1000); // Check every second instead of every 100ms
-        }
-
-        // Initialize when the page loads
-        window.addEventListener('load', () => {
-            log('INIT', 'Page loaded');
-            setTimeout(observeWidget, 1000);
         });
+
+        // Start observing widget once it's available
+        const checkWidget = setInterval(() => {
+            const widget = document.getElementById('convai-widget');
+            if (widget) {
+                clearInterval(checkWidget);
+                widgetObserver.observe(widget, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true
+                });
+                log('INIT', 'Widget observer started');
+            }
+        }, 1000);
     </script>
 </body>
 </html>
