@@ -1,78 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- Previous head and style sections remain the same -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emma AI Assistant</title>
     <style>
-        /* Previous styles remain the same */
-        .image-preload {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            opacity: 0;
-            pointer-events: none;
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+        }
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #000;
+        }
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            max-width: 100vw;
+            max-height: 100vh;
+            transition: opacity 0.3s ease;
+        }
+        elevenlabs-convai {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        @media screen and (max-width: 768px) {
+            .background-image {
+                object-position: center center;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Add preload div for images -->
-    <div id="imagePreload" class="image-preload">
-        <img src="./emma.png" alt="Emma Default" onload="imageLoaded('emma.png')" onerror="imageError('emma.png')">
-        <img src="./emma2.png" alt="Emma Speaking" onload="imageLoaded('emma2.png')" onerror="imageError('emma2.png')">
-    </div>
-
-    <div id="debugPanel"></div>
     <div class="background-container">
         <img id="backgroundImage" class="background-image" src="./emma.png" alt="Emma Background">
     </div>
     
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
-    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
+    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
     <script>
-        // Track available images
-        const availableImages = {
-            'emma.png': false,
-            'emma2.png': false
-        };
-
-        function imageLoaded(imageName) {
-            availableImages[imageName] = true;
-            logDebug(`Image loaded successfully:`, imageName);
-        }
-
-        function imageError(imageName) {
-            availableImages[imageName] = false;
-            logDebug(`⚠️ Error loading image:`, imageName);
-        }
-
-        function switchBackground(speaking) {
-            if (speaking === currentSpeakingState) {
-                logDebug('Speaking state unchanged:', speaking);
-                return;
+        window.addEventListener('load', async () => {
+            try {
+                const conversation = await Conversation.startSession({
+                    signedUrl: signedUrl,
+                    clientTools: {
+                        switchbackground: async (parameters) => {
+                            const bgImage = document.getElementById('backgroundImage');
+                            if (parameters.speaking) {
+                                bgImage.src = './emma2.png';
+                            } else {
+                                bgImage.src = './emma.png';
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error starting conversation:', error);
             }
-
-            const newSrc = speaking ? './emma2.png' : './emma.png';
-            
-            // Check if the target image is available
-            if (!availableImages[speaking ? 'emma2.png' : 'emma.png']) {
-                logDebug(`⚠️ Cannot switch background - image not available:`, newSrc);
-                return;
-            }
-
-            currentSpeakingState = speaking;
-            const bgImage = document.getElementById('backgroundImage');
-            
-            logDebug(`Speaking state changed to:`, speaking, true);
-            logDebug(`Switching background to:`, newSrc);
-            
-            bgImage.src = newSrc;
-        }
-
-        // Rest of the code remains the same
-        // ... (previous logging, initialization, and event handling code)
+        });
     </script>
 </body>
 </html>
