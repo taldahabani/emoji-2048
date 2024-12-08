@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://elevenlabs.io 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <!-- Updated CSP to allow necessary resources -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://elevenlabs.io blob: data:; script-src 'self' https://elevenlabs.io 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; worker-src blob:; child-src blob:;">
     <title>Emma AI Assistant</title>
     <style>
-        /* Base styles */
         body, html {
             margin: 0;
             padding: 0;
@@ -57,75 +57,46 @@
     <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
-    <!-- Import scripts -->
-    <script src="https://elevenlabs.io/convai/lib/conversational.js" defer></script>
-    <script src="https://elevenlabs.io/convai-widget/index.js" defer></script>
+    <!-- Import the widget script -->
+    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
     <script>
-        // Create a safe function to handle background switching
-        const backgroundHandler = {
-            logDebug: function(message, data) {
-                console.log(`[Debug] ${message}`, data);
-            },
-            
-            handleBackgroundSwitch: function(speaking) {
-                this.logDebug('Switching background', { speaking });
-                const backgroundImage = document.getElementById('backgroundImage');
-                if (backgroundImage) {
-                    const newSrc = speaking ? './emma2.png' : './emma.png';
-                    this.logDebug('Setting new image source', { newSrc });
-                    backgroundImage.src = newSrc;
-                }
-            }
-        };
+        // Debug logging function
+        function logDebug(message, data) {
+            console.log(`[Debug] ${message}`, data);
+        }
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            backgroundHandler.logDebug('DOM loaded, setting up widget...');
-            
+        // Function to switch background
+        function handleBackgroundSwitch(speaking) {
+            logDebug('Switching background', { speaking });
+            const backgroundImage = document.getElementById('backgroundImage');
+            if (backgroundImage) {
+                const newSrc = speaking ? './emma2.png' : './emma.png';
+                logDebug('Setting new image source', { newSrc });
+                backgroundImage.src = newSrc;
+            }
+        }
+
+        // Initialize when document is loaded
+        document.addEventListener('DOMContentLoaded', () => {
             const widget = document.querySelector('elevenlabs-convai');
-            if (!widget) {
-                console.error('Widget not found');
-                return;
-            }
-
-            // Set up widget event listeners
-            widget.addEventListener('ready', async function(event) {
-                backgroundHandler.logDebug('Widget ready event received', event);
-                try {
-                    const signedUrl = event.detail?.signedUrl;
-                    if (!signedUrl) {
-                        throw new Error('No signed URL provided');
-                    }
-
-                    if (typeof window.conversational?.startSession !== 'function') {
-                        throw new Error('Conversation module not properly loaded');
-                    }
-
-                    const conversation = await window.conversational.startSession({
-                        signedUrl: signedUrl,
-                        clientTools: {
-                            switchBackground: async function(parameters) {
-                                backgroundHandler.logDebug('switchBackground called', parameters);
-                                backgroundHandler.handleBackgroundSwitch(parameters.speaking);
-                                return { success: true };
-                            }
-                        }
-                    });
-                    
-                    backgroundHandler.logDebug('Conversation session started successfully');
-                } catch (error) {
-                    console.error('Initialization error:', error);
+            
+            // Listen for state changes
+            widget.addEventListener('statechange', (event) => {
+                logDebug('State changed:', event.detail);
+                if (event.detail?.state === 'speaking') {
+                    handleBackgroundSwitch(true);
+                } else if (event.detail?.state === 'idle') {
+                    handleBackgroundSwitch(false);
                 }
             });
 
             // Debug event listeners
-            ['message', 'error', 'ready', 'speechstart', 'speechend', 'conversationstart', 'conversationend', 'statechange']
-                .forEach(function(eventName) {
-                    widget.addEventListener(eventName, function(event) {
-                        backgroundHandler.logDebug(`Event: ${eventName}`, event.detail);
-                    });
+            ['message', 'error', 'ready', 'audiostart', 'audioend', 'speechstart', 'speechend'].forEach(eventName => {
+                widget.addEventListener(eventName, (event) => {
+                    logDebug(`Event: ${eventName} received`, event.detail);
                 });
+            });
         });
     </script>
 </body>
