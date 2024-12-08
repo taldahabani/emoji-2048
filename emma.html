@@ -47,12 +47,20 @@
         <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
+    <elevenlabs-convai 
+        id="convai-widget" 
+        agent-id="UFCiWykxf7I8pgANcBuJ" 
+        client-events='["switchBackground", "audio"]'>
+    </elevenlabs-convai>
+
+    <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
     <script>
         // HTML elements
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
+        const convaiWidget = document.getElementById('convai-widget');
 
-        // Function to switch background
+        // Switch background function
         function switchBackground(isSpeaking) {
             if (isSpeaking) {
                 defaultBg.classList.add('hidden');
@@ -63,36 +71,50 @@
             }
         }
 
-        // Detect audio activity
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
+        // Audio detection logic
+        function setupAudioDetection() {
+            try {
                 const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(stream);
                 const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                source.connect(analyser);
-                analyser.fftSize = 256;
+                // Capture widget's audio output
+                const widgetOutput = convaiWidget.shadowRoot.querySelector('audio');
+                if (!widgetOutput) {
+                    console.error('No audio element found in widget');
+                    return;
+                }
 
+                const source = audioContext.createMediaElementSource(widgetOutput);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                // Monitor audio levels
                 function detectAudio() {
                     analyser.getByteFrequencyData(dataArray);
                     const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
 
-                    // Switch background based on audio activity
-                    if (audioLevel > 10) { // Adjust threshold if necessary
-                        switchBackground(true); // Audio detected
+                    // Change background based on audio level
+                    if (audioLevel > 10) { // Adjust threshold as needed
+                        switchBackground(true);
                     } else {
-                        switchBackground(false); // No audio
+                        switchBackground(false);
                     }
 
                     requestAnimationFrame(detectAudio);
                 }
 
                 detectAudio();
-            })
-            .catch(err => {
-                console.error('Error accessing microphone:', err);
-            });
+            } catch (error) {
+                console.error('Error setting up audio detection:', error);
+            }
+        }
+
+        // Initialize detection when widget is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAudioDetection();
+        });
     </script>
 </body>
 </html>
