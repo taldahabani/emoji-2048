@@ -85,10 +85,9 @@
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
     <!-- ElevenLabs Convai Widget Script -->
-    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
+    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
     <script>
-        // Debug panel functionality
         const debugPanel = document.getElementById('debug-panel');
         
         function logEvent(event) {
@@ -107,17 +106,25 @@
             
             debugPanel.insertBefore(entry, debugPanel.firstChild);
             
-            // Keep only last 50 entries to prevent memory issues
+            // Keep only last 50 entries
             while (debugPanel.children.length > 50) {
                 debugPanel.removeChild(debugPanel.lastChild);
             }
+            
+            // Also log to console
+            console.log(`Event: ${eventName}`, event);
         }
 
-        // Wait for the widget to load
-        window.addEventListener('load', () => {
-            // Get the widget element
-            const widget = document.querySelector('elevenlabs-convai');
+        function setupEventListeners() {
+            // Log initial setup attempt
+            logEvent({ type: 'debug', detail: { message: 'Setting up event listeners' } });
             
+            const widget = document.querySelector('elevenlabs-convai');
+            if (!widget) {
+                logEvent({ type: 'error', detail: { message: 'Widget not found' } });
+                return;
+            }
+
             // List of events to listen for
             const events = [
                 'message',
@@ -128,17 +135,45 @@
                 'speechstart',
                 'speechend',
                 'conversationstart',
-                'conversationend'
+                'conversationend',
+                'statechange',  // Added statechange event
+                'input',        // Added input event
+                'output'        // Added output event
             ];
             
             // Add listeners for each event
             events.forEach(eventName => {
                 widget.addEventListener(eventName, (event) => {
                     logEvent(event);
-                    console.log(`Event: ${eventName}`, event); // Also log to console
                 });
+                logEvent({ type: 'debug', detail: { message: `Added listener for ${eventName}` } });
             });
+        }
+
+        // Try multiple approaches to ensure we catch the widget initialization
+        // 1. Wait for custom element to be defined
+        customElements.whenDefined('elevenlabs-convai').then(() => {
+            logEvent({ type: 'debug', detail: { message: 'Custom element defined' } });
+            setupEventListeners();
         });
+
+        // 2. Wait for DOM content to be loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            logEvent({ type: 'debug', detail: { message: 'DOM content loaded' } });
+            setupEventListeners();
+        });
+
+        // 3. Wait for window load
+        window.addEventListener('load', () => {
+            logEvent({ type: 'debug', detail: { message: 'Window loaded' } });
+            setupEventListeners();
+        });
+
+        // 4. Try after a short delay
+        setTimeout(() => {
+            logEvent({ type: 'debug', detail: { message: 'Delayed setup' } });
+            setupEventListeners();
+        }, 2000);
     </script>
 </body>
 </html>
