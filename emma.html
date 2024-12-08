@@ -48,16 +48,52 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        #debugInfo {
+        /* Enhanced Debug Panel */
+        #debugPanel {
             position: fixed;
             top: 10px;
             left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            padding: 15px;
             font-family: monospace;
             font-size: 12px;
             z-index: 9999;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 5px;
+            border: 1px solid #00ff00;
+        }
+
+        .debug-entry {
+            margin: 5px 0;
+            border-bottom: 1px solid rgba(0, 255, 0, 0.2);
+            padding-bottom: 5px;
+        }
+
+        .debug-time {
+            color: #888;
+            font-size: 10px;
+        }
+
+        .debug-type {
+            color: #ff9900;
+        }
+
+        /* Toggle Debug Button */
+        #toggleDebug {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: monospace;
+            border-radius: 5px;
         }
 
         @media screen and (max-width: 768px) {
@@ -68,8 +104,11 @@
     </style>
 </head>
 <body>
-    <div id="debugInfo"></div>
+    <!-- Debug Panel -->
+    <div id="debugPanel"></div>
+    <button id="toggleDebug">Toggle Debug</button>
 
+    <!-- Backgrounds -->
     <div class="background-container" id="defaultBg">
         <img class="background-image" src="emma.png" alt="Emma Background">
     </div>
@@ -78,6 +117,7 @@
         <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
+    <!-- ElevenLabs Widget -->
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ"
@@ -87,20 +127,45 @@
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
+        const debugPanel = document.getElementById('debugPanel');
+        const toggleDebug = document.getElementById('toggleDebug');
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
-        const debugInfo = document.getElementById('debugInfo');
 
-        function log(message) {
-            console.log(message);
-            debugInfo.innerHTML += message + '<br>';
-            if (debugInfo.innerHTML.split('<br>').length > 5) {
-                debugInfo.innerHTML = debugInfo.innerHTML.split('<br>').slice(-5).join('<br>');
+        // Debug Panel Toggle
+        toggleDebug.addEventListener('click', () => {
+            debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Enhanced Logging Function
+        function log(type, message, data = null) {
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'debug-entry';
+            
+            let content = `
+                <span class="debug-time">[${time}]</span>
+                <span class="debug-type">${type}:</span>
+                ${message}
+            `;
+
+            if (data) {
+                content += `<br><span style="color: #888">Data: ${JSON.stringify(data)}</span>`;
             }
+
+            entry.innerHTML = content;
+            debugPanel.insertBefore(entry, debugPanel.firstChild);
+
+            // Keep only last 20 entries
+            while (debugPanel.children.length > 20) {
+                debugPanel.removeChild(debugPanel.lastChild);
+            }
+
+            console.log(`[${type}]`, message, data || '');
         }
 
         function switchBackground(speaking) {
-            log(`🎤 Switching background: ${speaking ? 'speaking' : 'not speaking'}`);
+            log('BACKGROUND', `Switching to ${speaking ? 'speaking' : 'default'} state`);
             if (speaking) {
                 defaultBg.classList.add('hidden');
                 speakingBg.classList.remove('hidden');
@@ -110,18 +175,49 @@
             }
         }
 
-        // Listen for custom events from the widget
-        window.addEventListener('message', (event) => {
-            if (event.data.type === 'elevenlabs-convai') {
-                log(`📨 Event received: ${JSON.stringify(event.data)}`);
-                
-                if (event.data.event === 'switchBackground') {
-                    switchBackground(event.data.detail.speaking);
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            log('INIT', 'Page loaded, setting up event listeners');
+
+            // Listen for all widget events
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'elevenlabs-convai') {
+                    log('EVENT', 'Widget event received', event.data);
+                    
+                    if (event.data.event === 'switchBackground') {
+                        log('TOOL', 'Switch background tool called', event.data.detail);
+                        switchBackground(event.data.detail.speaking);
+                    }
                 }
+            });
+
+            // Monitor widget element
+            const widget = document.getElementById('convai-widget');
+            if (widget) {
+                log('INIT', 'Widget found in DOM');
+                
+                // Monitor widget for attribute changes
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        log('MUTATION', 'Widget DOM changed', {
+                            type: mutation.type,
+                            target: mutation.target.nodeName
+                        });
+                    });
+                });
+
+                observer.observe(widget, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true
+                });
             }
         });
 
-        log('✅ Setup complete');
+        // Log any errors
+        window.onerror = function(msg, url, line) {
+            log('ERROR', `${msg} at line ${line}`, { url });
+        };
     </script>
 </body>
 </html>
