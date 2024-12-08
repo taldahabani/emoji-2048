@@ -48,6 +48,20 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
 
+        /* Debug overlay */
+        #debugInfo {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
+        }
+
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
@@ -56,14 +70,17 @@
     </style>
 </head>
 <body>
+    <!-- Debug Info -->
+    <div id="debugInfo"></div>
+
     <!-- Default Background -->
     <div class="background-container" id="defaultBg">
-        <img class="background-image" src="./emma.png" alt="Emma Background">
+        <img class="background-image" src="./emma.png" alt="Emma Background" onload="logImageLoad('emma.png')" onerror="logImageError('emma.png')">
     </div>
 
     <!-- Speaking Background -->
     <div class="background-container hidden" id="speakingBg">
-        <img class="background-image" src="./emma2.png" alt="Emma Speaking Background">
+        <img class="background-image" src="./emma2.png" alt="Emma Speaking Background" onload="logImageLoad('emma2.png')" onerror="logImageError('emma2.png')">
     </div>
 
     <!-- ElevenLabs Convai Widget -->
@@ -77,32 +94,76 @@
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
+        // Enable debug mode
+        const DEBUG = true;
+        const debugInfo = document.getElementById('debugInfo');
+        if (DEBUG) debugInfo.style.display = 'block';
+
+        function log(message) {
+            if (DEBUG) {
+                console.log(message);
+                debugInfo.innerHTML += message + '<br>';
+                // Keep only last 5 messages
+                const lines = debugInfo.innerHTML.split('<br>');
+                if (lines.length > 5) {
+                    debugInfo.innerHTML = lines.slice(-5).join('<br>');
+                }
+            }
+        }
+
+        function logImageLoad(imageName) {
+            log(`✅ ${imageName} loaded successfully`);
+        }
+
+        function logImageError(imageName) {
+            log(`❌ Error loading ${imageName}`);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const defaultBg = document.getElementById('defaultBg');
             const speakingBg = document.getElementById('speakingBg');
-            const widget = document.getElementById('convai-widget');
+            
+            // Check if elements are found
+            if (!defaultBg || !speakingBg) {
+                log('❌ Background elements not found!');
+                return;
+            }
+
+            log('✅ Background elements found');
+
+            function switchToSpeaking() {
+                defaultBg.classList.add('hidden');
+                speakingBg.classList.remove('hidden');
+                log('🎤 Switched to speaking background');
+            }
+
+            function switchToDefault() {
+                defaultBg.classList.remove('hidden');
+                speakingBg.classList.add('hidden');
+                log('🔇 Switched to default background');
+            }
 
             // Listen for custom events from the widget
             window.addEventListener('message', (event) => {
                 if (event.data.type === 'elevenlabs-convai') {
-                    console.log('Event received:', event.data.event); // Debug log
+                    log(`📨 Event received: ${event.data.event}`);
                     
                     switch (event.data.event) {
                         case 'audio-start':
                         case 'audio-playing':
-                            defaultBg.classList.add('hidden');
-                            speakingBg.classList.remove('hidden');
+                            switchToSpeaking();
                             break;
                             
                         case 'audio-end':
                         case 'audio-stopped':
                         case 'interruption':
-                            defaultBg.classList.remove('hidden');
-                            speakingBg.classList.add('hidden');
+                            switchToDefault();
                             break;
                     }
                 }
             });
+
+            log('✅ Event listeners initialized');
         });
     </script>
 </body>
