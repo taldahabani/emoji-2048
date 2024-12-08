@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emma AI Assistant</title>
+    <title>TalkingAI Emma</title>
     <style>
         body, html {
             margin: 0;
@@ -13,6 +13,7 @@
             overflow: hidden;
             position: fixed;
         }
+
         .background-container {
             position: fixed;
             top: 0;
@@ -21,40 +22,77 @@
             height: 100%;
             z-index: -1;
             background-color: #000;
+            transition: opacity 0.3s ease;
         }
+
         .background-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
             object-position: center;
-            max-width: 100vw;
-            max-height: 100vh;
         }
-        elevenlabs-convai {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1;
-            padding-bottom: env(safe-area-inset-bottom); /* For devices with bottom bars /
-        }
-        / Additional mobile optimizations */
-        @media screen and (max-width: 768px) {
-            .background-image {
-                object-position: center center;
-            }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <!-- Background Container -->
-    <div class="background-container">
-        <img class="background-image" src="./emma.png" alt="Emma Background">
+    <div class="background-container" id="defaultBg">
+        <img class="background-image" src="emma.png" alt="Emma Background">
     </div>
-    <!-- ElevenLabs Convai Widget -->
-    <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
 
-    <!-- ElevenLabs Convai Widget Script -->
-    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
+    <div class="background-container hidden" id="speakingBg">
+        <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
+    </div>
+
+    <script>
+        // HTML elements
+        const defaultBg = document.getElementById('defaultBg');
+        const speakingBg = document.getElementById('speakingBg');
+
+        // Function to switch background
+        function switchBackground(isSpeaking) {
+            if (isSpeaking) {
+                defaultBg.classList.add('hidden');
+                speakingBg.classList.remove('hidden');
+            } else {
+                defaultBg.classList.remove('hidden');
+                speakingBg.classList.add('hidden');
+            }
+        }
+
+        // Detect audio activity
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const audioContext = new AudioContext();
+                const source = audioContext.createMediaStreamSource(stream);
+                const analyser = audioContext.createAnalyser();
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                source.connect(analyser);
+                analyser.fftSize = 256;
+
+                function detectAudio() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
+
+                    // Switch background based on audio activity
+                    if (audioLevel > 10) { // Adjust threshold if necessary
+                        switchBackground(true); // Audio detected
+                    } else {
+                        switchBackground(false); // No audio
+                    }
+
+                    requestAnimationFrame(detectAudio);
+                }
+
+                detectAudio();
+            })
+            .catch(err => {
+                console.error('Error accessing microphone:', err);
+            });
+    </script>
 </body>
 </html>
