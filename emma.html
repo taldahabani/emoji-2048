@@ -67,67 +67,43 @@
     </div>
 
     <!-- ElevenLabs Convai Widget -->
-    <elevenlabs-convai id="convai-widget" agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
+    <elevenlabs-convai 
+        id="convai-widget" 
+        agent-id="UFCiWykxf7I8pgANcBuJ"
+        client-events='["audio", "interruption"]'>
+    </elevenlabs-convai>
     
     <!-- ElevenLabs Convai Widget Script -->
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
-        // Wait for the widget to load
-        window.addEventListener('load', () => {
-            setTimeout(setupAudioDetection, 1000);
-        });
-
-        function setupAudioDetection() {
-            // Get background elements
+        document.addEventListener('DOMContentLoaded', () => {
             const defaultBg = document.getElementById('defaultBg');
             const speakingBg = document.getElementById('speakingBg');
-
-            // Function to check if audio is playing
-            function checkForAudio() {
-                const audioElements = document.querySelectorAll('audio');
-                audioElements.forEach(audio => {
-                    // When audio starts playing
-                    audio.addEventListener('play', () => {
-                        defaultBg.classList.add('hidden');
-                        speakingBg.classList.remove('hidden');
-                    });
-
-                    // When audio ends
-                    audio.addEventListener('ended', () => {
-                        defaultBg.classList.remove('hidden');
-                        speakingBg.classList.add('hidden');
-                    });
-
-                    // When audio is paused
-                    audio.addEventListener('pause', () => {
-                        defaultBg.classList.remove('hidden');
-                        speakingBg.classList.add('hidden');
-                    });
-                });
-            }
-
-            // Set up a mutation observer to watch for new audio elements
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.addedNodes.length) {
-                        checkForAudio();
-                    }
-                });
-            });
-
-            // Start observing the widget
             const widget = document.getElementById('convai-widget');
-            if (widget) {
-                observer.observe(widget, {
-                    childList: true,
-                    subtree: true
-                });
-            }
 
-            // Initial check for any existing audio elements
-            checkForAudio();
-        }
+            // Listen for custom events from the widget
+            window.addEventListener('message', (event) => {
+                if (event.data.type === 'elevenlabs-convai') {
+                    console.log('Event received:', event.data.event); // Debug log
+                    
+                    switch (event.data.event) {
+                        case 'audio-start':
+                        case 'audio-playing':
+                            defaultBg.classList.add('hidden');
+                            speakingBg.classList.remove('hidden');
+                            break;
+                            
+                        case 'audio-end':
+                        case 'audio-stopped':
+                        case 'interruption':
+                            defaultBg.classList.remove('hidden');
+                            speakingBg.classList.add('hidden');
+                            break;
+                    }
+                }
+            });
+        });
     </script>
 </body>
 </html>
