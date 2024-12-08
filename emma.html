@@ -64,12 +64,6 @@
             border-radius: 5px;
             border: 1px solid #00ff00;
         }
-
-        @media screen and (max-width: 768px) {
-            .background-image {
-                object-position: center center;
-            }
-        }
     </style>
 </head>
 <body>
@@ -83,17 +77,7 @@
         <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
-    <!-- Updated widget with ALL possible events -->
-    <elevenlabs-convai 
-        id="convai-widget" 
-        agent-id="UFCiWykxf7I8pgANcBuJ"
-        client-events='["switchBackground", "audio", "interruption", "connection", "message", "error"]'
-        onAudioPlay="handleAudioPlay()"
-        onAudioEnd="handleAudioEnd()"
-        onError="handleError(event)"
-        onConnectionUpdate="handleConnection(event)"
-        onMessage="handleMessage(event)">
-    </elevenlabs-convai>
+    <elevenlabs-convai id="convai-widget" agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
@@ -121,31 +105,8 @@
             if (debugPanel.children.length > 50) debugPanel.removeChild(debugPanel.lastChild);
         }
 
-        // Event Handlers
-        function handleAudioPlay() {
-            log('AUDIO', '▶️ Audio Started Playing');
-            switchBackground(true);
-        }
-
-        function handleAudioEnd() {
-            log('AUDIO', '⏹️ Audio Ended');
-            switchBackground(false);
-        }
-
-        function handleError(event) {
-            log('ERROR', '❌ Error occurred', event.detail);
-        }
-
-        function handleConnection(event) {
-            log('CONNECTION', '🔌 Connection update', event.detail);
-        }
-
-        function handleMessage(event) {
-            log('MESSAGE', '💬 Message received', event.detail);
-        }
-
         function switchBackground(speaking) {
-            log('BACKGROUND', `🔄 Switching background - Speaking: ${speaking}`);
+            log('BACKGROUND', `Switching to ${speaking ? 'speaking' : 'default'} background`);
             if (speaking) {
                 defaultBg.classList.add('hidden');
                 speakingBg.classList.remove('hidden');
@@ -155,43 +116,87 @@
             }
         }
 
-        // Listen for all possible events
-        document.addEventListener('DOMContentLoaded', () => {
-            log('INIT', '🚀 Page loaded, setting up event listeners');
-            
+        // Monitor for audio elements
+        function setupAudioMonitoring() {
             const widget = document.getElementById('convai-widget');
-            
-            // Listen for custom events
-            window.addEventListener('message', (event) => {
-                if (event.data && event.data.type === 'elevenlabs-convai') {
-                    log('EVENT', '📨 Widget event received', event.data);
-                    
-                    switch(event.data.event) {
-                        case 'switchBackground':
-                            switchBackground(event.data.detail.speaking);
-                            break;
-                        case 'audio-playing':
-                            handleAudioPlay();
-                            break;
-                        case 'audio-stopped':
-                        case 'audio-end':
-                            handleAudioEnd();
-                            break;
+            if (!widget) return;
+
+            // Function to check if any audio is playing in the widget
+            function checkAudioState() {
+                const audioElements = widget.getElementsByTagName('audio');
+                let isPlaying = false;
+
+                for (let audio of audioElements) {
+                    if (!audio.paused && !audio.ended && audio.currentTime > 0) {
+                        isPlaying = true;
+                        break;
                     }
                 }
+
+                switchBackground(isPlaying);
+            }
+
+            // Create MutationObserver to watch for new audio elements
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        mutation.addedNodes.forEach((node) => {
+                            if (node.nodeName === 'AUDIO') {
+                                log('AUDIO', 'New audio element detected');
+                                
+                                // Monitor this audio element
+                                node.addEventListener('play', () => {
+                                    log('AUDIO', 'Audio started playing');
+                                    switchBackground(true);
+                                });
+
+                                node.addEventListener('pause', () => {
+                                    log('AUDIO', 'Audio paused');
+                                    switchBackground(false);
+                                });
+
+                                node.addEventListener('ended', () => {
+                                    log('AUDIO', 'Audio ended');
+                                    switchBackground(false);
+                                });
+                            }
+                        });
+                    }
+                });
             });
 
-            // Add direct event listeners
-            if (widget) {
-                widget.addEventListener('audioPlay', handleAudioPlay);
-                widget.addEventListener('audioEnd', handleAudioEnd);
-                widget.addEventListener('error', handleError);
-                widget.addEventListener('connectionUpdate', handleConnection);
-                widget.addEventListener('message', handleMessage);
-                
-                log('INIT', '✅ Widget event listeners attached');
-            }
+            // Start observing the widget
+            observer.observe(widget, {
+                childList: true,
+                subtree: true
+            });
+
+            // Also check periodically for audio state
+            setInterval(checkAudioState, 100);
+
+            log('INIT', 'Audio monitoring system initialized');
+        }
+
+        // Initialize everything when the page loads
+        window.addEventListener('load', () => {
+            log('INIT', 'Page loaded');
+            
+            // Wait a bit for the widget to initialize
+            setTimeout(() => {
+                setupAudioMonitoring();
+                log('INIT', 'Setup complete');
+            }, 1000);
         });
+
+        // Backup check for widget initialization
+        const checkWidget = setInterval(() => {
+            const widget = document.getElementById('convai-widget');
+            if (widget && widget.shadowRoot) {
+                clearInterval(checkWidget);
+                log('INIT', 'Widget shadow root detected');
+                setupAudioMonitoring();
+            }
+        }, 500);
     </script>
 </body>
 </html>
