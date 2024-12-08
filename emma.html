@@ -1,212 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emma AI Assistant</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            position: fixed;
-        }
-
-        .background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-color: #000;
-            transition: opacity 0.3s ease;
-        }
-
-        .background-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            max-width: 100vw;
-            max-height: 100vh;
-        }
-
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        elevenlabs-convai {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1;
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        /* Enhanced Debug Panel */
-        #debugPanel {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.9);
-            color: #00ff00;
-            padding: 15px;
-            font-family: monospace;
-            font-size: 12px;
-            z-index: 9999;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 5px;
-            border: 1px solid #00ff00;
-        }
-
-        .event-client { color: #00ffff; }
-        .event-audio { color: #ff00ff; }
-        .event-background { color: #ffff00; }
-        .event-error { color: #ff0000; }
-        .event-init { color: #00ff00; }
-        .event-widget { color: #ffa500; }
-
-        /* Debug Controls */
-        #debugControls {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 9999;
-        }
-
-        .debug-button {
-            background: rgba(0, 0, 0, 0.8);
-            color: #00ff00;
-            border: 1px solid #00ff00;
-            padding: 5px 10px;
-            margin: 2px;
-            cursor: pointer;
-            border-radius: 3px;
-        }
-    </style>
-</head>
+<!-- ... (keep all the previous head and style content the same) ... -->
 <body>
-    <!-- Debug Panel and Controls -->
     <div id="debugPanel"></div>
     <div id="debugControls">
         <button class="debug-button" onclick="clearDebug()">Clear Debug</button>
         <button class="debug-button" onclick="toggleDebug()">Toggle Debug</button>
     </div>
 
-    <!-- Background Images -->
     <div class="background-container" id="defaultBg">
-        <img class="background-image" src="emma.png" alt="Emma Background" onload="logImageLoad('emma.png')" onerror="logImageError('emma.png')">
+        <img class="background-image" src="emma.png" alt="Emma Background">
     </div>
 
     <div class="background-container hidden" id="speakingBg">
-        <img class="background-image" src="emma2.png" alt="Emma Speaking Background" onload="logImageLoad('emma2.png')" onerror="logImageError('emma2.png')">
+        <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
-    <!-- ElevenLabs Widget with all possible events -->
+    <!-- Updated widget with explicit event handlers -->
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ"
-        client-events='["switchBackground", "audio", "interruption", "connection", "message", "error"]'>
+        client-events='["switchBackground", "audio", "interruption", "connection", "message", "error"]'
+        onmessage="handleWidgetMessage(event)"
+        onaudiostart="handleAudioStart()"
+        onaudioend="handleAudioEnd()"
+        oninterruption="handleInterruption()"
+        onconnectionupdate="handleConnection(event)"
+        onerror="handleError(event)">
     </elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
-        // Debug Elements
-        const debugPanel = document.getElementById('debugPanel');
-        const defaultBg = document.getElementById('defaultBg');
-        const speakingBg = document.getElementById('speakingBg');
+        // ... (keep existing debug panel and logging functions) ...
 
-        // State Management
-        let currentState = {
-            speaking: false,
-            lastEventTime: Date.now(),
-            currentBackground: 'emma.png',
-            audioPlaying: false,
-            lastAudioEvent: null
-        };
-
-        // Debug Functions
-        function clearDebug() {
-            debugPanel.innerHTML = '';
-            log('INIT', 'Debug cleared');
+        // New Event Handlers
+        function handleWidgetMessage(event) {
+            log('WIDGET', 'Message received', event.detail);
         }
 
-        function toggleDebug() {
-            debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
+        function handleAudioStart() {
+            log('AUDIO', '🎤 Audio started');
+            switchBackground(true);
         }
 
-        function logImageLoad(imageName) {
-            log('INIT', `✅ Image loaded: ${imageName}`);
+        function handleAudioEnd() {
+            log('AUDIO', '🔇 Audio ended');
+            switchBackground(false);
         }
 
-        function logImageError(imageName) {
-            log('ERROR', `❌ Image failed to load: ${imageName}`);
+        function handleInterruption() {
+            log('AUDIO', '⚠️ Audio interrupted');
+            switchBackground(false);
         }
 
-        function log(type, message, data = null) {
-            const time = new Date().toLocaleTimeString();
-            const entry = document.createElement('div');
-            entry.className = `event-${type.toLowerCase()}`;
-            
-            let dataStr = '';
-            if (data) {
-                try {
-                    dataStr = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-                } catch (e) {
-                    dataStr = '[Complex Object]';
-                }
-            }
-
-            entry.innerHTML = `
-                <span style="color: #888">[${time}]</span>
-                <span style="color: #ff9900">[${type}]</span>
-                <span>${message}</span>
-                ${dataStr ? `<br><span style="color: #888">${dataStr}</span>` : ''}
-            `;
-            
-            debugPanel.insertBefore(entry, debugPanel.firstChild);
-            console.log(`[${time}] [${type}]`, message, data || '');
+        function handleConnection(event) {
+            log('CONNECTION', '🔌 Connection update', event.detail);
         }
 
-        // Background Switching
-        function switchBackground(speaking) {
-            const newState = speaking ? 'emma2.png' : 'emma.png';
-            
-            log('BACKGROUND', `Attempt to switch background`, {
-                speaking: speaking,
-                currentState: currentState,
-                newBackground: newState
-            });
-
-            if (currentState.currentBackground !== newState) {
-                if (speaking) {
-                    defaultBg.classList.add('hidden');
-                    speakingBg.classList.remove('hidden');
-                } else {
-                    defaultBg.classList.remove('hidden');
-                    speakingBg.classList.add('hidden');
-                }
-                
-                currentState = {
-                    ...currentState,
-                    speaking: speaking,
-                    lastEventTime: Date.now(),
-                    currentBackground: newState
-                };
-
-                log('BACKGROUND', 'Background switched successfully', currentState);
-            }
+        function handleError(event) {
+            log('ERROR', '❌ Error occurred', event.detail);
         }
 
-        // Event Listeners
+        // Message Event Handler
         window.addEventListener('message', (event) => {
             if (event.data.type === 'elevenlabs-convai') {
                 log('CLIENT', 'Received client event', event.data);
@@ -222,9 +78,13 @@
                     case 'audio':
                         const audioEvent = event.data.detail;
                         log('CLIENT', 'Received audio event', audioEvent);
+                        if (audioEvent.status === 'playing') {
+                            handleAudioStart();
+                        } else if (audioEvent.status === 'ended') {
+                            handleAudioEnd();
+                        }
                         if (audioEvent.interruption) {
-                            log('AUDIO', 'Audio interruption detected', audioEvent);
-                            switchBackground(false);
+                            handleInterruption();
                         }
                         break;
                     default:
@@ -233,47 +93,63 @@
             }
         });
 
-        // Initialization
+        // Direct Event Listeners for Widget
         document.addEventListener('DOMContentLoaded', () => {
-            log('INIT', 'Page loaded, initializing...');
-            
             const widget = document.getElementById('convai-widget');
             if (widget) {
-                log('INIT', 'Widget found', {
-                    attributes: Array.from(widget.attributes).map(attr => ({
-                        name: attr.name,
-                        value: attr.value
-                    }))
-                });
-            } else {
-                log('ERROR', 'Widget not found in DOM');
+                widget.addEventListener('audioStart', handleAudioStart);
+                widget.addEventListener('audioEnd', handleAudioEnd);
+                widget.addEventListener('interruption', handleInterruption);
+                widget.addEventListener('connectionUpdate', handleConnection);
+                widget.addEventListener('error', handleError);
+                widget.addEventListener('message', handleWidgetMessage);
+                
+                // Also add audio monitoring
+                widget.addEventListener('play', () => {
+                    log('AUDIO', '▶️ Play event detected');
+                    switchBackground(true);
+                }, true);
+                
+                widget.addEventListener('pause', () => {
+                    log('AUDIO', '⏸️ Pause event detected');
+                    switchBackground(false);
+                }, true);
+
+                log('INIT', 'All event listeners attached to widget');
             }
         });
 
-        // Widget State Monitor
-        const widgetObserver = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                log('WIDGET', 'Widget state changed', {
-                    type: mutation.type,
-                    target: mutation.target.nodeName,
-                    attributeName: mutation.attributeName
+        // Additional WebSocket monitoring
+        function checkWebSocketConnections() {
+            const allWebSockets = window.performance.getEntriesByType("resource")
+                .filter(entry => entry.initiatorType === "xmlhttprequest" || entry.name.includes('websocket'));
+            
+            if (allWebSockets.length > 0) {
+                log('CONNECTION', 'WebSocket connections found', allWebSockets);
+            }
+        }
+
+        // Check connections periodically
+        setInterval(checkWebSocketConnections, 5000);
+
+        // Monitor for any audio elements added to the page
+        const audioObserver = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.tagName === 'AUDIO') {
+                        log('AUDIO', '🔊 New audio element detected');
+                        node.addEventListener('play', handleAudioStart);
+                        node.addEventListener('ended', handleAudioEnd);
+                        node.addEventListener('pause', handleAudioEnd);
+                    }
                 });
             });
         });
 
-        // Start widget observation
-        const checkWidget = setInterval(() => {
-            const widget = document.getElementById('convai-widget');
-            if (widget) {
-                clearInterval(checkWidget);
-                widgetObserver.observe(widget, {
-                    attributes: true,
-                    childList: true,
-                    subtree: true
-                });
-                log('INIT', 'Widget observer started');
-            }
-        }, 1000);
+        audioObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     </script>
 </body>
 </html>
