@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Updated CSP to allow necessary resources -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://elevenlabs.io blob: data:; script-src 'self' https://elevenlabs.io 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; worker-src blob:; child-src blob:;">
+    <!-- Updated CSP to allow ElevenLabs API -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://elevenlabs.io https://*.elevenlabs.io blob: data:; connect-src 'self' https://elevenlabs.io https://*.elevenlabs.io; script-src 'self' https://elevenlabs.io 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; worker-src blob:; child-src blob:;">
     <title>Emma AI Assistant</title>
     <style>
         body, html {
@@ -31,7 +31,6 @@
             object-position: center;
             max-width: 100vw;
             max-height: 100vh;
-            transition: opacity 0.3s ease;
         }
         elevenlabs-convai {
             position: fixed;
@@ -61,19 +60,12 @@
     <script src="https://elevenlabs.io/convai-widget/index.js"></script>
 
     <script>
-        // Debug logging function
-        function logDebug(message, data) {
-            console.log(`[Debug] ${message}`, data);
-        }
-
         // Function to switch background
-        function handleBackgroundSwitch(speaking) {
-            logDebug('Switching background', { speaking });
+        function switchBackground(speaking) {
             const backgroundImage = document.getElementById('backgroundImage');
             if (backgroundImage) {
-                const newSrc = speaking ? './emma2.png' : './emma.png';
-                logDebug('Setting new image source', { newSrc });
-                backgroundImage.src = newSrc;
+                backgroundImage.src = speaking ? './emma2.png' : './emma.png';
+                console.log('Background switched:', speaking ? 'speaking' : 'not speaking');
             }
         }
 
@@ -81,20 +73,39 @@
         document.addEventListener('DOMContentLoaded', () => {
             const widget = document.querySelector('elevenlabs-convai');
             
-            // Listen for state changes
-            widget.addEventListener('statechange', (event) => {
-                logDebug('State changed:', event.detail);
-                if (event.detail?.state === 'speaking') {
-                    handleBackgroundSwitch(true);
-                } else if (event.detail?.state === 'idle') {
-                    handleBackgroundSwitch(false);
+            // Listen for the ready event to initialize conversation
+            widget.addEventListener('ready', async (event) => {
+                const signedUrl = event.detail?.signedUrl;
+                console.log('Widget ready, signed URL received:', !!signedUrl);
+
+                if (signedUrl) {
+                    try {
+                        // Initialize conversation with client tool
+                        const conversation = await Conversation.startSession({
+                            signedUrl: signedUrl,
+                            clientTools: {
+                                switchBackground: async (parameters) => {
+                                    console.log('switchBackground called with parameters:', parameters);
+                                    switchBackground(parameters.speaking);
+                                    return { success: true };
+                                }
+                            }
+                        });
+                        console.log('Conversation session started successfully');
+                    } catch (error) {
+                        console.error('Error starting conversation:', error);
+                    }
                 }
             });
 
-            // Debug event listeners
-            ['message', 'error', 'ready', 'audiostart', 'audioend', 'speechstart', 'speechend'].forEach(eventName => {
+            // Listen for state changes as backup
+            widget.addEventListener('audiostart', () => switchBackground(true));
+            widget.addEventListener('audioend', () => switchBackground(false));
+            
+            // Debug logging
+            ['message', 'error', 'ready', 'statechange', 'conversationstart', 'conversationend'].forEach(eventName => {
                 widget.addEventListener(eventName, (event) => {
-                    logDebug(`Event: ${eventName} received`, event.detail);
+                    console.log(`Event ${eventName}:`, event.detail);
                 });
             });
         });
