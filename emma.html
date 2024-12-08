@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emma AI Assistant</title>
     <style>
+        /* Previous styles remain the same */
         body, html {
             margin: 0;
             padding: 0;
@@ -77,7 +78,10 @@
         <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
     </div>
 
-    <elevenlabs-convai id="convai-widget" agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
+    <elevenlabs-convai 
+        id="convai-widget" 
+        agent-id="UFCiWykxf7I8pgANcBuJ">
+    </elevenlabs-convai>
     
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
@@ -85,6 +89,11 @@
         const debugPanel = document.getElementById('debugPanel');
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
+        
+        // State tracking
+        let currentlyPlaying = false;
+        let lastStateChange = Date.now();
+        const DEBOUNCE_TIME = 300; // ms to wait before allowing another state change
 
         function log(type, message, data = null) {
             const time = new Date().toLocaleTimeString();
@@ -106,97 +115,88 @@
         }
 
         function switchBackground(speaking) {
-            log('BACKGROUND', `Switching to ${speaking ? 'speaking' : 'default'} background`);
-            if (speaking) {
-                defaultBg.classList.add('hidden');
-                speakingBg.classList.remove('hidden');
-            } else {
-                defaultBg.classList.remove('hidden');
-                speakingBg.classList.add('hidden');
+            // Prevent rapid switching
+            const now = Date.now();
+            if (now - lastStateChange < DEBOUNCE_TIME) return;
+            
+            // Only switch if state actually changed
+            if (speaking !== currentlyPlaying) {
+                log('BACKGROUND', `Switching to ${speaking ? 'speaking' : 'default'} background`);
+                currentlyPlaying = speaking;
+                lastStateChange = now;
+
+                if (speaking) {
+                    defaultBg.classList.add('hidden');
+                    speakingBg.classList.remove('hidden');
+                } else {
+                    defaultBg.classList.remove('hidden');
+                    speakingBg.classList.add('hidden');
+                }
             }
         }
 
-        // Monitor for audio elements
-        function setupAudioMonitoring() {
+        function setupAudioListeners(audioElement) {
+            log('AUDIO', 'Setting up listeners for audio element');
+
+            audioElement.addEventListener('play', () => {
+                log('AUDIO', 'Play event detected');
+                switchBackground(true);
+            });
+
+            audioElement.addEventListener('pause', () => {
+                log('AUDIO', 'Pause event detected');
+                switchBackground(false);
+            });
+
+            audioElement.addEventListener('ended', () => {
+                log('AUDIO', 'End event detected');
+                switchBackground(false);
+            });
+        }
+
+        function observeWidget() {
             const widget = document.getElementById('convai-widget');
             if (!widget) return;
 
-            // Function to check if any audio is playing in the widget
-            function checkAudioState() {
-                const audioElements = widget.getElementsByTagName('audio');
-                let isPlaying = false;
-
-                for (let audio of audioElements) {
-                    if (!audio.paused && !audio.ended && audio.currentTime > 0) {
-                        isPlaying = true;
-                        break;
-                    }
-                }
-
-                switchBackground(isPlaying);
-            }
-
-            // Create MutationObserver to watch for new audio elements
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
                     if (mutation.addedNodes.length) {
                         mutation.addedNodes.forEach((node) => {
-                            if (node.nodeName === 'AUDIO') {
-                                log('AUDIO', 'New audio element detected');
-                                
-                                // Monitor this audio element
-                                node.addEventListener('play', () => {
-                                    log('AUDIO', 'Audio started playing');
-                                    switchBackground(true);
-                                });
-
-                                node.addEventListener('pause', () => {
-                                    log('AUDIO', 'Audio paused');
-                                    switchBackground(false);
-                                });
-
-                                node.addEventListener('ended', () => {
-                                    log('AUDIO', 'Audio ended');
-                                    switchBackground(false);
-                                });
+                            if (node.tagName === 'AUDIO') {
+                                setupAudioListeners(node);
+                            }
+                            // Check for audio elements in subtree
+                            if (node.querySelectorAll) {
+                                node.querySelectorAll('audio').forEach(setupAudioListeners);
                             }
                         });
                     }
                 });
             });
 
-            // Start observing the widget
             observer.observe(widget, {
                 childList: true,
                 subtree: true
             });
 
-            // Also check periodically for audio state
-            setInterval(checkAudioState, 100);
-
-            log('INIT', 'Audio monitoring system initialized');
+            // Gentle periodic check
+            setInterval(() => {
+                if (!document.getElementsByTagName('audio').length) return;
+                
+                const anyPlaying = Array.from(document.getElementsByTagName('audio'))
+                    .some(audio => !audio.paused && audio.currentTime > 0);
+                
+                if (anyPlaying !== currentlyPlaying) {
+                    switchBackground(anyPlaying);
+                }
+            }, 1000); // Check every second instead of every 100ms
         }
 
-        // Initialize everything when the page loads
+        // Initialize when the page loads
         window.addEventListener('load', () => {
             log('INIT', 'Page loaded');
-            
-            // Wait a bit for the widget to initialize
-            setTimeout(() => {
-                setupAudioMonitoring();
-                log('INIT', 'Setup complete');
-            }, 1000);
+            setTimeout(observeWidget, 1000);
         });
-
-        // Backup check for widget initialization
-        const checkWidget = setInterval(() => {
-            const widget = document.getElementById('convai-widget');
-            if (widget && widget.shadowRoot) {
-                clearInterval(checkWidget);
-                log('INIT', 'Widget shadow root detected');
-                setupAudioMonitoring();
-            }
-        }, 500);
     </script>
 </body>
 </html>
