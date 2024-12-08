@@ -39,6 +39,19 @@
             z-index: 1;
             padding-bottom: env(safe-area-inset-bottom);
         }
+        #debugPanel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
@@ -47,32 +60,125 @@
     </style>
 </head>
 <body>
+    <div id="debugPanel"></div>
     <div class="background-container">
         <img id="backgroundImage" class="background-image" src="./emma.png" alt="Emma Background">
     </div>
     
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
-    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
+    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
     <script>
+        // Debug logging function
+        function logDebug(message, data = null) {
+            const debugPanel = document.getElementById('debugPanel');
+            const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+            const debugMessage = `[${timestamp}] ${message}`;
+            
+            console.log(debugMessage, data);
+            
+            const logEntry = document.createElement('div');
+            logEntry.textContent = data ? 
+                `${debugMessage} ${JSON.stringify(data)}` : 
+                debugMessage;
+            
+            debugPanel.appendChild(logEntry);
+            debugPanel.scrollTop = debugPanel.scrollHeight;
+            
+            while (debugPanel.children.length > 50) {
+                debugPanel.removeChild(debugPanel.firstChild);
+            }
+        }
+
+        // Wait for the widget to load and initialize
+        function waitForConvai() {
+            return new Promise((resolve, reject) => {
+                if (window.Conversation) {
+                    resolve(window.Conversation);
+                } else {
+                    logDebug('Waiting for Convai to initialize...');
+                    const checkInterval = setInterval(() => {
+                        if (window.Conversation) {
+                            clearInterval(checkInterval);
+                            resolve(window.Conversation);
+                        }
+                    }, 100);
+
+                    // Timeout after 10 seconds
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        reject(new Error('Timeout waiting for Convai to initialize'));
+                    }, 10000);
+                }
+            });
+        }
+
+        // Initialize everything after the page loads
         window.addEventListener('load', async () => {
+            logDebug('Page loaded, waiting for widget initialization...');
+            
             try {
+                // Wait for the Conversation object to be available
+                const Conversation = await waitForConvai();
+                logDebug('Convai widget initialized');
+
+                // Add widget ready listener
+                document.querySelector('elevenlabs-convai').addEventListener('ready', () => {
+                    logDebug('Convai widget ready event fired');
+                });
+
                 const conversation = await Conversation.startSession({
                     signedUrl: signedUrl,
                     clientTools: {
                         switchbackground: async (parameters) => {
-                            const bgImage = document.getElementById('backgroundImage');
-                            if (parameters.speaking) {
-                                bgImage.src = './emma2.png';
-                            } else {
-                                bgImage.src = './emma.png';
+                            logDebug('switchbackground called with parameters:', parameters);
+                            
+                            try {
+                                const bgImage = document.getElementById('backgroundImage');
+                                const newSrc = parameters.speaking ? './emma2.png' : './emma.png';
+                                
+                                logDebug(`Switching background to: ${newSrc}`);
+                                bgImage.src = newSrc;
+                                
+                                logDebug('Background switch completed');
+                            } catch (error) {
+                                logDebug('Error in switchbackground:', error.message);
+                                throw error;
                             }
                         }
                     }
                 });
+
+                logDebug('Conversation session started successfully');
+                
+                // Debug event listeners
+                conversation.on('message', (message) => {
+                    logDebug('Message received:', message);
+                });
+                
+                conversation.on('error', (error) => {
+                    logDebug('Conversation error:', error);
+                });
+                
             } catch (error) {
-                console.error('Error starting conversation:', error);
+                logDebug('Error starting conversation:', error.message);
+                console.error('Full error:', error);
             }
+        });
+
+        // Global error handlers
+        window.onerror = function(msg, url, line, col, error) {
+            logDebug('Global error:', {
+                message: msg,
+                url: url,
+                line: line,
+                col: col
+            });
+            return false;
+        };
+
+        window.addEventListener('unhandledrejection', function(event) {
+            logDebug('Unhandled Promise rejection:', event.reason);
         });
     </script>
 </body>
