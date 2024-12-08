@@ -22,7 +22,7 @@
             height: 100%;
             z-index: -1;
             background-color: #000;
-            transition: opacity 0.3s ease; /* Smooth transition between backgrounds */
+            transition: opacity 0.3s ease;
         }
 
         .background-image {
@@ -36,6 +36,7 @@
 
         .hidden {
             opacity: 0;
+            pointer-events: none;
         }
 
         elevenlabs-convai {
@@ -66,47 +67,67 @@
     </div>
 
     <!-- ElevenLabs Convai Widget -->
-    <elevenlabs-convai 
-        agent-id="UFCiWykxf7I8pgANcBuJ"
-        onAudioPlay="handleAudioPlay()"
-        onAudioEnd="handleAudioEnd()"
-        onInterruption="handleInterruption()">
-    </elevenlabs-convai>
+    <elevenlabs-convai id="convai-widget" agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
     <!-- ElevenLabs Convai Widget Script -->
     <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 
     <script>
-        // Get background elements
-        const defaultBg = document.getElementById('defaultBg');
-        const speakingBg = document.getElementById('speakingBg');
-
-        // Event handlers
-        function handleAudioPlay() {
-            defaultBg.classList.add('hidden');
-            speakingBg.classList.remove('hidden');
-        }
-
-        function handleAudioEnd() {
-            defaultBg.classList.remove('hidden');
-            speakingBg.classList.add('hidden');
-        }
-
-        function handleInterruption() {
-            // Return to default background when interrupted
-            defaultBg.classList.remove('hidden');
-            speakingBg.classList.add('hidden');
-        }
-
-        // Initialize widget events
+        // Wait for the widget to load
         window.addEventListener('load', () => {
-            const widget = document.querySelector('elevenlabs-convai');
-            if (widget) {
-                widget.addEventListener('audioPlay', handleAudioPlay);
-                widget.addEventListener('audioEnd', handleAudioEnd);
-                widget.addEventListener('interruption', handleInterruption);
-            }
+            setTimeout(setupAudioDetection, 1000);
         });
+
+        function setupAudioDetection() {
+            // Get background elements
+            const defaultBg = document.getElementById('defaultBg');
+            const speakingBg = document.getElementById('speakingBg');
+
+            // Function to check if audio is playing
+            function checkForAudio() {
+                const audioElements = document.querySelectorAll('audio');
+                audioElements.forEach(audio => {
+                    // When audio starts playing
+                    audio.addEventListener('play', () => {
+                        defaultBg.classList.add('hidden');
+                        speakingBg.classList.remove('hidden');
+                    });
+
+                    // When audio ends
+                    audio.addEventListener('ended', () => {
+                        defaultBg.classList.remove('hidden');
+                        speakingBg.classList.add('hidden');
+                    });
+
+                    // When audio is paused
+                    audio.addEventListener('pause', () => {
+                        defaultBg.classList.remove('hidden');
+                        speakingBg.classList.add('hidden');
+                    });
+                });
+            }
+
+            // Set up a mutation observer to watch for new audio elements
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.addedNodes.length) {
+                        checkForAudio();
+                    }
+                });
+            });
+
+            // Start observing the widget
+            const widget = document.getElementById('convai-widget');
+            if (widget) {
+                observer.observe(widget, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+
+            // Initial check for any existing audio elements
+            checkForAudio();
+        }
     </script>
 </body>
 </html>
