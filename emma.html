@@ -3,10 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElevenLabs Convai Widget</title>
+    <title>Emma AI Assistant</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed; /* Prevents mobile browser address bar from affecting layout */
+        }
+
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-color: #000; /* Fallback color while image loads */
+        }
+
+        .background-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            max-width: 100vw; /* Ensures image doesn't overflow viewport width */
+            max-height: 100vh; /* Ensures image doesn't overflow viewport height */
+        }
+
+        elevenlabs-convai {
+            position: relative;
+            z-index: 1;
+            display: block;
+            height: 100vh; /* Full viewport height */
+        }
+
+        /* Additional mobile optimizations */
+        @media screen and (max-width: 768px) {
+            .background-image {
+                object-position: center center; /* Centers image on mobile */
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- ElevenLabs Convai Widget Configuration -->
+    <!-- Background Container -->
+    <div class="background-container">
+        <img class="background-image" src="./emma.png" alt="Emma Background">
+    </div>
+
+    <!-- ElevenLabs Convai Widget -->
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
     
     <!-- ElevenLabs Convai Widget Script -->
