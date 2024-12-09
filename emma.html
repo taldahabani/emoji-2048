@@ -52,7 +52,7 @@
         const videoSource = document.getElementById('videoSource');
         const convaiWidget = document.getElementById('convai-widget');
 
-        // Function to change video source
+        // Function to switch the video source
         function switchVideoSource(newSource) {
             const currentSrc = videoSource.src.split('/').pop(); // Get current video file name
             if (currentSrc !== newSource) {
@@ -87,7 +87,7 @@
                     analyser.getByteFrequencyData(dataArray);
                     const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
 
-                    if (audioLevel > 10) { // Adjust this threshold as necessary
+                    if (audioLevel > 10) { // Adjust threshold as necessary
                         if (!isSpeaking) {
                             isSpeaking = true;
                             switchVideoSource('speaking.mp4'); // Play speaking video
