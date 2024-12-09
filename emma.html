@@ -24,33 +24,17 @@
             transition: opacity 0.3s ease;
         }
 
-        .background-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-
         .background-video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
-    <div class="background-container" id="defaultBg">
-        <img class="background-image" src="emma.png" alt="Emma Background">
-    </div>
-
-    <div class="background-container hidden" id="speakingBg">
-        <video class="background-video" id="speakingVideo" autoplay loop muted>
-            <source src="speaking.mp4" type="video/mp4">
+    <div class="background-container" id="background">
+        <video class="background-video" id="backgroundVideo" autoplay loop muted>
+            <source src="hello.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
@@ -58,28 +42,72 @@
     <elevenlabs-convai 
         id="convai-widget" 
         agent-id="UFCiWykxf7I8pgANcBuJ" 
-        client-events='["switchBackground", "audio"]'>
+        client-events='["audio"]'>
     </elevenlabs-convai>
 
     <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
     <script>
-        const defaultBg = document.getElementById('defaultBg');
-        const speakingBg = document.getElementById('speakingBg');
+        const backgroundVideo = document.getElementById('backgroundVideo');
         const convaiWidget = document.getElementById('convai-widget');
 
-        function switchBackground(isSpeaking) {
-            if (isSpeaking) {
-                defaultBg.classList.add('hidden');
-                speakingBg.classList.remove('hidden');
-            } else {
-                defaultBg.classList.remove('hidden');
-                speakingBg.classList.add('hidden');
+        // Function to switch background video
+        function switchBackgroundVideo(videoSource) {
+            if (backgroundVideo.src !== videoSource) {
+                backgroundVideo.src = videoSource;
+                backgroundVideo.play();
             }
         }
 
+        // Set up audio detection
         function setupAudioDetection() {
             try {
                 const audioContext = new AudioContext();
                 const analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
-                const dataArray = new Uint8Array(analyser.frequencyBinCount
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                // Capture widget's audio output
+                const widgetOutput = convaiWidget.shadowRoot.querySelector('audio');
+                if (!widgetOutput) {
+                    console.error('No audio element found in widget');
+                    return;
+                }
+
+                const source = audioContext.createMediaElementSource(widgetOutput);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
+
+                let isSpeaking = false;
+
+                function detectAudio() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
+
+                    if (audioLevel > 10) { // Adjust threshold if necessary
+                        if (!isSpeaking) {
+                            isSpeaking = true;
+                            switchBackgroundVideo('speaking.mp4'); // Show speaking background
+                        }
+                    } else {
+                        if (isSpeaking) {
+                            isSpeaking = false;
+                            switchBackgroundVideo('hello.mp4'); // Show default background
+                        }
+                    }
+
+                    requestAnimationFrame(detectAudio);
+                }
+
+                detectAudio();
+            } catch (error) {
+                console.error('Error setting up audio detection:', error);
+            }
+        }
+
+        // Initialize audio detection when the page is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAudioDetection();
+        });
+    </script>
+</body>
+</html>
