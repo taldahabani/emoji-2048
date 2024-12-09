@@ -96,6 +96,15 @@
 
         // Additional attempt after a short delay
         setTimeout(playWelcomeAudio, 1000);
+
+        // Function to handle events
+        function handleEvent(event) {
+            console.log(`Event: ${event.type}`, event.detail);
+        }
+
+        // Add event listeners for 'audio' and 'interruption' events
+        document.addEventListener('audio', handleEvent);
+        document.addEventListener('interruption', handleEvent);
     </script>
 </body>
 </html>
