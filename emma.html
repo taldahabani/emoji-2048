@@ -28,6 +28,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
     </style>
 </head>
@@ -51,16 +52,17 @@
         const videoSource = document.getElementById('videoSource');
         const convaiWidget = document.getElementById('convai-widget');
 
-        // Function to switch the video source
+        // Function to change video source
         function switchVideoSource(newSource) {
-            if (videoSource.src !== location.origin + '/' + newSource) {
+            const currentSrc = videoSource.src.split('/').pop(); // Get current video file name
+            if (currentSrc !== newSource) {
                 videoSource.src = newSource;
-                backgroundVideo.load();
-                backgroundVideo.play();
+                backgroundVideo.load(); // Reload the video source
+                backgroundVideo.play(); // Start playing the new video
             }
         }
 
-        // Set up audio detection
+        // Audio detection logic
         function setupAudioDetection() {
             try {
                 const audioContext = new AudioContext();
@@ -68,14 +70,14 @@
                 analyser.fftSize = 256;
                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // Capture widget's audio output
-                const widgetOutput = convaiWidget.shadowRoot.querySelector('audio');
-                if (!widgetOutput) {
-                    console.error('No audio element found in widget');
+                // Find the audio element in the widget
+                const widgetAudio = convaiWidget.shadowRoot.querySelector('audio');
+                if (!widgetAudio) {
+                    console.error('No audio element found in widget.');
                     return;
                 }
 
-                const source = audioContext.createMediaElementSource(widgetOutput);
+                const source = audioContext.createMediaElementSource(widgetAudio);
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
 
@@ -85,7 +87,7 @@
                     analyser.getByteFrequencyData(dataArray);
                     const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
 
-                    if (audioLevel > 10) { // Adjust threshold as needed
+                    if (audioLevel > 10) { // Adjust this threshold as necessary
                         if (!isSpeaking) {
                             isSpeaking = true;
                             switchVideoSource('speaking.mp4'); // Play speaking video
