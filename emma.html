@@ -50,69 +50,118 @@
 
     <elevenlabs-convai 
         id="convai-widget" 
-        agent-id="UFCiWykxf7I8pgANcBuJ" 
-        client-events='["audio"]'>
+        agent-id="UFCiWykxf7I8pgANcBuJ">
     </elevenlabs-convai>
     
-    <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
+    <script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
     <script>
-        const backgroundVideo = document.getElementById('backgroundVideo');
-        const videoSource = document.getElementById('videoSource');
-        const convaiWidget = document.getElementById('convai-widget');
+        let audioContext = null;
+        let isAudioInitialized = false;
 
+        // Function to switch video source
         function switchVideoSource(newSource) {
+            const videoSource = document.getElementById('videoSource');
+            const backgroundVideo = document.getElementById('backgroundVideo');
+            
             const currentSrc = videoSource.src.split('/').pop();
             if (currentSrc !== newSource) {
                 videoSource.src = newSource;
                 backgroundVideo.load();
-                backgroundVideo.play();
+                backgroundVideo.play().catch(error => {
+                    console.warn('Video playback error:', error);
+                });
             }
         }
 
-        function setupAudioDetection() {
+        // Function to initialize audio context after user interaction
+        function initializeAudioContext() {
+            if (isAudioInitialized) return;
+            
             try {
-                const audioContext = new AudioContext();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioInitialized = true;
+                setupAudioDetection();
+            } catch (error) {
+                console.error('Failed to initialize AudioContext:', error);
+            }
+        }
+
+        // Modified audio detection setup
+        function setupAudioDetection() {
+            if (!audioContext) return;
+
+            try {
                 const analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                const widgetAudio = convaiWidget.shadowRoot.querySelector('audio');
-                if (!widgetAudio) {
-                    console.error('No audio element found in widget.');
-                    return;
-                }
-
-                const source = audioContext.createMediaElementSource(widgetAudio);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-
-                let isSpeaking = false;
-
-                function detectAudio() {
-                    analyser.getByteFrequencyData(dataArray);
-                    const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
-                    
-                    if (audioLevel > 10) {
-                        if (!isSpeaking) {
-                            isSpeaking = true;
-                            switchVideoSource('speaking.mp4');
-                        }
-                    } else {
-                        if (isSpeaking) {
-                            isSpeaking = false;
-                            switchVideoSource('hello.mp4');
-                        }
+                // Wait for the widget to be fully loaded
+                function checkForAudio() {
+                    const convaiWidget = document.getElementById('convai-widget');
+                    if (!convaiWidget || !convaiWidget.shadowRoot) {
+                        setTimeout(checkForAudio, 500);
+                        return;
                     }
-                    requestAnimationFrame(detectAudio);
+
+                    const widgetAudio = convaiWidget.shadowRoot.querySelector('audio');
+                    if (!widgetAudio) {
+                        setTimeout(checkForAudio, 500);
+                        return;
+                    }
+
+                    const source = audioContext.createMediaElementSource(widgetAudio);
+                    source.connect(analyser);
+                    analyser.connect(audioContext.destination);
+
+                    let isSpeaking = false;
+
+                    function detectAudio() {
+                        analyser.getByteFrequencyData(dataArray);
+                        const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
+                        
+                        if (audioLevel > 10) {
+                            if (!isSpeaking) {
+                                isSpeaking = true;
+                                switchVideoSource('speaking.mp4');
+                            }
+                        } else {
+                            if (isSpeaking) {
+                                isSpeaking = false;
+                                switchVideoSource('hello.mp4');
+                            }
+                        }
+                        requestAnimationFrame(detectAudio);
+                    }
+
+                    detectAudio();
                 }
-                detectAudio();
+
+                checkForAudio();
             } catch (error) {
-                console.error('Error setting up audio detection:', error);
+                console.error('Error in audio detection setup:', error);
             }
         }
 
+        // Initialize when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            setupAudioDetection();
+            // Add click listener to initialize audio context
+            document.addEventListener('click', initializeAudioContext, { once: true });
+            
+            // Add touch listener for mobile devices
+            document.addEventListener('touchstart', initializeAudioContext, { once: true });
+        });
+
+        // Handle visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (audioContext) {
+                    audioContext.suspend();
+                }
+            } else {
+                if (audioContext) {
+                    audioContext.resume();
+                }
+            }
         });
     </script>
 </body>
