@@ -5,132 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TalkingAI Emma</title>
     <style>
-        body, html {
+        * {
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            position: fixed;
+            box-sizing: border-box;
         }
-        .background-container {
+
+        .video-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            transition: opacity 0.3s ease;
+            overflow: hidden;
         }
-        .background-image {
-            width: 100%;
-            height: 100%;
+
+        video {
+            position: absolute;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             object-fit: cover;
-            object-position: center;
-        }
-        .background-video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        elevenlabs-convai {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1;
         }
     </style>
 </head>
 <body>
-    <div class="background-container" id="defaultBg">
-        <img class="background-image" src="emma.png" alt="Emma Background">
-    </div>
-    <div class="background-container hidden" id="speakingBg">
-        <video class="background-video" id="speakingVideo" autoplay loop muted>
-            <source src="speaking.mp4" type="video/mp4">
+    <div class="video-container">
+        <video 
+            id="backgroundVideo"
+            autoplay 
+            muted 
+            loop 
+            playsinline
+            poster="emma.png">
+            <source id="videoSource" src="hello.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
-    
+
     <elevenlabs-convai 
         id="convai-widget" 
-        agent-id="UFCiWykxf7I8pgANcBuJ">
+        agent-id="UFCiWykxf7I8pgANcBuJ" 
+        client-events='["audio"]'>
     </elevenlabs-convai>
-
-    <script src="https://elevenlabs.io/convai-widget/index.js"></script>
-
+    
+    <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
     <script>
-        const defaultBg = document.getElementById('defaultBg');
-        const speakingBg = document.getElementById('speakingBg');
+        const backgroundVideo = document.getElementById('backgroundVideo');
+        const videoSource = document.getElementById('videoSource');
         const convaiWidget = document.getElementById('convai-widget');
-        const speakingVideo = document.getElementById('speakingVideo');
 
-        // Function to switch background
-        function switchBackground(isSpeaking) {
-            console.log('Switching background:', isSpeaking ? 'speaking' : 'not speaking');
-            if (isSpeaking) {
-                defaultBg.classList.add('hidden');
-                speakingBg.classList.remove('hidden');
-                speakingVideo.play().catch(console.error);
-            } else {
-                defaultBg.classList.remove('hidden');
-                speakingBg.classList.add('hidden');
-                speakingVideo.pause();
+        function switchVideoSource(newSource) {
+            const currentSrc = videoSource.src.split('/').pop();
+            if (currentSrc !== newSource) {
+                videoSource.src = newSource;
+                backgroundVideo.load();
+                backgroundVideo.play();
             }
         }
 
-        // Wait for the widget to be ready
-        document.addEventListener('DOMContentLoaded', () => {
-            // Log when widget is loaded
-            console.log('DOM Content Loaded, setting up widget...');
+        function setupAudioDetection() {
+            try {
+                const audioContext = new AudioContext();
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-            convaiWidget.addEventListener('ready', (event) => {
-                console.log('Widget ready event received');
-                
-                // Set up client tools
-                if (event.detail?.signedUrl) {
-                    window.clientTools = {
-                        switchBackground: async (parameters) => {
-                            console.log('switchBackground called with parameters:', parameters);
-                            switchBackground(parameters.speaking);
-                            return { success: true };
-                        }
-                    };
+                const widgetAudio = convaiWidget.shadowRoot.querySelector('audio');
+                if (!widgetAudio) {
+                    console.error('No audio element found in widget.');
+                    return;
                 }
-            });
 
-            // Listen for audio events
-            convaiWidget.addEventListener('audiostart', () => {
-                console.log('Audio started');
-                switchBackground(true);
-            });
+                const source = audioContext.createMediaElementSource(widgetAudio);
+                source.connect(analyser);
+                analyser.connect(audioContext.destination);
 
-            convaiWidget.addEventListener('audioend', () => {
-                console.log('Audio ended');
-                switchBackground(false);
-            });
+                let isSpeaking = false;
 
-            // Debug event listeners
-            ['message', 'error', 'statechange', 'conversationstart', 'conversationend'].forEach(eventName => {
-                convaiWidget.addEventListener(eventName, (event) => {
-                    console.log(`Event ${eventName}:`, event.detail);
-                });
-            });
-        });
+                function detectAudio() {
+                    analyser.getByteFrequencyData(dataArray);
+                    const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
+                    
+                    if (audioLevel > 10) {
+                        if (!isSpeaking) {
+                            isSpeaking = true;
+                            switchVideoSource('speaking.mp4');
+                        }
+                    } else {
+                        if (isSpeaking) {
+                            isSpeaking = false;
+                            switchVideoSource('hello.mp4');
+                        }
+                    }
+                    requestAnimationFrame(detectAudio);
+                }
+                detectAudio();
+            } catch (error) {
+                console.error('Error setting up audio detection:', error);
+            }
+        }
 
-        // Ensure video is ready to play
-        speakingVideo.addEventListener('loadeddata', () => {
-            console.log('Video loaded and ready');
-        });
-
-        // Error handling for video
-        speakingVideo.addEventListener('error', (e) => {
-            console.error('Video error:', e);
+        document.addEventListener('DOMContentLoaded', () => {
+            setupAudioDetection();
         });
     </script>
 </body>
