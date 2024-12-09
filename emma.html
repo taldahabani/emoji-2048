@@ -21,7 +21,6 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background-color: #000;
             transition: opacity 0.3s ease;
         }
 
@@ -30,6 +29,12 @@
             height: 100%;
             object-fit: cover;
             object-position: center;
+        }
+
+        .background-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .hidden {
@@ -44,7 +49,10 @@
     </div>
 
     <div class="background-container hidden" id="speakingBg">
-        <img class="background-image" src="emma2.png" alt="Emma Speaking Background">
+        <video class="background-video" id="speakingVideo" autoplay loop muted>
+            <source src="speaking.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
     </div>
 
     <elevenlabs-convai 
@@ -55,12 +63,10 @@
 
     <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
     <script>
-        // HTML elements
         const defaultBg = document.getElementById('defaultBg');
         const speakingBg = document.getElementById('speakingBg');
         const convaiWidget = document.getElementById('convai-widget');
 
-        // Switch background function
         function switchBackground(isSpeaking) {
             if (isSpeaking) {
                 defaultBg.classList.add('hidden');
@@ -71,50 +77,9 @@
             }
         }
 
-        // Audio detection logic
         function setupAudioDetection() {
             try {
                 const audioContext = new AudioContext();
                 const analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
-                const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-                // Capture widget's audio output
-                const widgetOutput = convaiWidget.shadowRoot.querySelector('audio');
-                if (!widgetOutput) {
-                    console.error('No audio element found in widget');
-                    return;
-                }
-
-                const source = audioContext.createMediaElementSource(widgetOutput);
-                source.connect(analyser);
-                analyser.connect(audioContext.destination);
-
-                // Monitor audio levels
-                function detectAudio() {
-                    analyser.getByteFrequencyData(dataArray);
-                    const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
-
-                    // Change background based on audio level
-                    if (audioLevel > 10) { // Adjust threshold as needed
-                        switchBackground(true);
-                    } else {
-                        switchBackground(false);
-                    }
-
-                    requestAnimationFrame(detectAudio);
-                }
-
-                detectAudio();
-            } catch (error) {
-                console.error('Error setting up audio detection:', error);
-            }
-        }
-
-        // Initialize detection when widget is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            setupAudioDetection();
-        });
-    </script>
-</body>
-</html>
+                const dataArray = new Uint8Array(analyser.frequencyBinCount
