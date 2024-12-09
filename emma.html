@@ -21,7 +21,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            transition: opacity 0.3s ease;
+            background-color: #000;
         }
 
         .background-video {
@@ -32,9 +32,9 @@
     </style>
 </head>
 <body>
-    <div class="background-container" id="background">
+    <div class="background-container">
         <video class="background-video" id="backgroundVideo" autoplay loop muted>
-            <source src="hello.mp4" type="video/mp4">
+            <source id="videoSource" src="hello.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>
@@ -48,12 +48,14 @@
     <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
     <script>
         const backgroundVideo = document.getElementById('backgroundVideo');
+        const videoSource = document.getElementById('videoSource');
         const convaiWidget = document.getElementById('convai-widget');
 
-        // Function to switch background video
-        function switchBackgroundVideo(videoSource) {
-            if (backgroundVideo.src !== videoSource) {
-                backgroundVideo.src = videoSource;
+        // Function to switch the video source
+        function switchVideoSource(newSource) {
+            if (videoSource.src !== location.origin + '/' + newSource) {
+                videoSource.src = newSource;
+                backgroundVideo.load();
                 backgroundVideo.play();
             }
         }
@@ -83,15 +85,15 @@
                     analyser.getByteFrequencyData(dataArray);
                     const audioLevel = dataArray.reduce((sum, value) => sum + value, 0);
 
-                    if (audioLevel > 10) { // Adjust threshold if necessary
+                    if (audioLevel > 10) { // Adjust threshold as needed
                         if (!isSpeaking) {
                             isSpeaking = true;
-                            switchBackgroundVideo('speaking.mp4'); // Show speaking background
+                            switchVideoSource('speaking.mp4'); // Play speaking video
                         }
                     } else {
                         if (isSpeaking) {
                             isSpeaking = false;
-                            switchBackgroundVideo('hello.mp4'); // Show default background
+                            switchVideoSource('hello.mp4'); // Play default video
                         }
                     }
 
