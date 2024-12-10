@@ -38,35 +38,9 @@
             z-index: 1;
             padding-bottom: env(safe-area-inset-bottom);
         }
-        #conversation-log {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 300px;
-            height: 400px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px;
-            overflow-y: auto;
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-        }
-        #conversation-log p {
-            margin: 5px 0;
-            padding: 5px;
-            border-radius: 3px;
-        }
-        #conversation-log p:nth-child(odd) {
-            background: rgba(255, 255, 255, 0.1);
-        }
         @media screen and (max-width: 768px) {
             .background-image {
                 object-position: center center;
-            }
-            #conversation-log {
-                width: 80%;
-                right: 10%;
-                height: 30vh;
             }
         }
     </style>
@@ -75,26 +49,26 @@
     <div class="background-container">
         <img class="background-image" src="./emma.png" alt="Emma Background">
     </div>
-    
-    <div id="conversation-log"></div>
-    
+    <!-- Preload audio for faster loading -->
     <audio id="welcomeAudio" preload="auto">
         <source src="hey.mp3" type="audio/mpeg">
     </audio>
-    
     <elevenlabs-convai agent-id="UFCiWykxf7I8pgANcBuJ"></elevenlabs-convai>
-    
     <script src="https://elevenlabs.io/convai-widget/index.js" async></script>
-    
     <script>
+        // Function to play audio
         function playWelcomeAudio() {
             const audio = document.getElementById('welcomeAudio');
+            // Reset audio to beginning
             audio.currentTime = 0;
+            // Set volume
             audio.volume = 1.0;
+            // Promise-based play with retry
             const playAttempt = audio.play();
             if (playAttempt !== undefined) {
                 playAttempt.catch(error => {
                     console.log('Auto-play failed:', error);
+                    // Add click event listener if autoplay fails
                     document.addEventListener('click', function playOnClick() {
                         audio.play();
                         document.removeEventListener('click', playOnClick);
@@ -102,65 +76,15 @@
                 });
             }
         }
-
-        function logConversation(role, text) {
-            const log = document.getElementById('conversation-log');
-            const entry = document.createElement('p');
-            entry.textContent = `${role}: ${text}`;
-            log.appendChild(entry);
-            log.scrollTop = log.scrollHeight;
-            console.log(`${role}: ${text}`); // Debug logging
-        }
-
-        function initializeConversationListeners() {
-            // Wait for widget to be fully loaded
-            const checkWidget = setInterval(() => {
-                const widget = document.querySelector('elevenlabs-convai');
-                if (widget) {
-                    clearInterval(checkWidget);
-                    
-                    // Custom event listener for widget responses
-                    widget.addEventListener('response', (event) => {
-                        if (event.detail && event.detail.text) {
-                            logConversation('AI', event.detail.text);
-                        }
-                    });
-
-                    // Custom event listener for user input
-                    widget.addEventListener('userinput', (event) => {
-                        if (event.detail && event.detail.text) {
-                            logConversation('User', event.detail.text);
-                        }
-                    });
-
-                    // Fallback window message listener
-                    window.addEventListener('message', (event) => {
-                        if (event.data && event.data.type === 'elevenlabs-response') {
-                            logConversation('AI', event.data.text);
-                        }
-                        if (event.data && event.data.type === 'elevenlabs-user-input') {
-                            logConversation('User', event.data.text);
-                        }
-                    });
-
-                    console.log('Conversation listeners initialized');
-                }
-            }, 500);
-        }
-
-        // Initialize everything when DOM is loaded
+        // Try to play when page loads
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                playWelcomeAudio();
-                initializeConversationListeners();
-            });
+            document.addEventListener('DOMContentLoaded', playWelcomeAudio);
         } else {
             playWelcomeAudio();
-            initializeConversationListeners();
         }
-
-        // Backup audio play attempts
+        // Backup: also try to play when window loads
         window.addEventListener('load', playWelcomeAudio);
+        // Additional attempt after a short delay
         setTimeout(playWelcomeAudio, 1000);
     </script>
 </body>
