@@ -11,7 +11,7 @@
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
 
-  <!-- Web3Modal and Ethers.js (if needed for wallet connection) -->
+  <!-- Web3Modal and Ethers.js CDN (if you need wallet connections) -->
   <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.8/dist/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
 
@@ -58,11 +58,13 @@
 </head>
 <body class="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-indigo-900 text-white">
 
-  <!-- Modal for Connect Wallet (hidden by default) -->
+  <!-- Wallet Modal (Only one!) -->
   <div id="walletModal" class="modal">
     <div class="modal-content">
       <span id="closeModal" class="close-modal">&times;</span>
-      <h2 class="text-2xl font-bold mb-4">Connect Your Wallet</h2>
+      <h2 class="text-2xl font-bold mb-4 flex items-center">
+        <i data-lucide="wallet" class="w-6 h-6 mr-2"></i> Connect Your Wallet
+      </h2>
       <button id="connectWalletBtn" class="btn-primary w-full">
         Connect Wallet
       </button>
@@ -72,13 +74,14 @@
     </div>
   </div>
 
-  <!-- Main Header / Nav Bar -->
+  <!-- Header / Nav -->
   <header class="border-b border-purple-700">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <!-- Logo / Brand Name -->
-      <div class="text-2xl font-bold">MemeBots.io</div>
-
-      <!-- Desktop Navigation -->
+      <!-- Brand / Logo -->
+      <div class="text-2xl font-bold flex items-center">
+        <i data-lucide="smile" class="w-6 h-6 mr-2"></i> MemeBots.io
+      </div>
+      <!-- Desktop Nav -->
       <nav class="hidden md:flex space-x-6 items-center">
         <a href="#protocol" class="hover:text-purple-300 flex items-center">
           <i data-lucide="shield" class="w-5 h-5 mr-1"></i> Protocol
@@ -86,6 +89,7 @@
         <a href="#how-it-works" class="hover:text-purple-300 flex items-center">
           <i data-lucide="settings" class="w-5 h-5 mr-1"></i> How it Works
         </a>
+        <!-- Single Connect Wallet button -->
         <button id="connectWalletNav" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg flex items-center">
           <i data-lucide="user" class="w-5 h-5 mr-1"></i> Connect Wallet
         </button>
@@ -94,16 +98,17 @@
         </button>
       </nav>
 
-      <!-- Hamburger Icon (mobile only) -->
+      <!-- Hamburger Menu (mobile) -->
       <div class="hamburger md:hidden" id="hamburger">
         <i data-lucide="menu" class="w-6 h-6"></i>
       </div>
     </div>
 
-    <!-- Mobile Menu (hidden by default) -->
+    <!-- Mobile Menu -->
     <nav id="mobileMenu" class="mobile-menu bg-purple-800 bg-opacity-95 text-center">
       <a href="#protocol" class="hover:text-purple-300">Protocol</a>
       <a href="#how-it-works" class="hover:text-purple-300">How it Works</a>
+      <!-- Single Connect Wallet button (mobile) -->
       <button id="connectWalletMobile" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg my-2 flex items-center justify-center">
         <i data-lucide="user" class="w-5 h-5 mr-1"></i> Connect Wallet
       </button>
@@ -116,7 +121,7 @@
   <!-- Hero Section -->
   <section class="container mx-auto px-4 py-16">
     <div class="flex flex-col lg:flex-row items-center justify-between">
-      <!-- Hero Text -->
+      <!-- Text Column -->
       <div class="w-full lg:w-1/2 mb-12 lg:mb-0">
         <h1 class="text-5xl md:text-6xl font-bold mb-6">
           AI-Powered Meme Coin Revolution
@@ -134,10 +139,8 @@
           </a>
         </div>
       </div>
-
-      <!-- Hero Image -->
+      <!-- Image Column -->
       <div class="w-full lg:w-1/2 flex justify-center">
-        <!-- Replace this placeholder with your actual image -->
         <img
           src="https://via.placeholder.com/500"
           alt="MemeBot Preview"
@@ -175,7 +178,7 @@
     </div>
   </section>
 
-  <!-- How it Works -->
+  <!-- How it Works Section -->
   <section id="how-it-works" class="bg-purple-800 bg-opacity-50 py-16">
     <div class="container mx-auto px-4">
       <h2 class="text-4xl font-bold text-center mb-12">How MemeBots Work</h2>
@@ -248,31 +251,27 @@
   <footer class="border-t border-purple-700 mt-16">
     <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <!-- Column 1 -->
+        <!-- Column 1 - Branding -->
         <div class="space-y-4">
-          <div class="text-2xl font-bold">MemeBots.io</div>
-          <p class="text-sm text-purple-300">
-            © 2024 MemeBots.io All Rights Reserved.
-          </p>
+          <div class="text-2xl font-bold flex items-center">
+            <i data-lucide="smile" class="w-6 h-6 mr-2"></i> MemeBots.io
+          </div>
+          <p class="text-sm text-purple-300">© 2024 MemeBots.io All Rights Reserved.</p>
           <a href="#legal" class="text-sm text-purple-300 hover:text-white">
             Legal Disclaimer
           </a>
         </div>
 
-        <!-- Column 2 -->
+        <!-- Column 2 - Documentation -->
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Documentation</h3>
           <div class="space-y-2">
-            <a href="#whitepaper" class="block text-purple-300 hover:text-white">
-              Whitepaper
-            </a>
-            <a href="#governance" class="block text-purple-300 hover:text-white">
-              Governance Forum
-            </a>
+            <a href="#whitepaper" class="block text-purple-300 hover:text-white">Whitepaper</a>
+            <a href="#governance" class="block text-purple-300 hover:text-white">Governance Forum</a>
           </div>
         </div>
 
-        <!-- Column 3 -->
+        <!-- Column 3 - Community -->
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Community</h3>
           <div class="space-y-2">
@@ -307,7 +306,7 @@
           </div>
         </div>
 
-        <!-- Column 4 -->
+        <!-- Column 4 - Token Info -->
         <div class="space-y-4">
           <div>
             <h3 class="font-bold mb-2">A Public Good for</h3>
@@ -329,21 +328,14 @@
     lucide.createIcons();
   </script>
 
-  <!-- Basic Web3 / Menu Script -->
+  <!-- Basic JS for Mobile Menu, Wallet, and Minting -->
   <script>
-    // Optional: If not using Web3, remove references to web3Modal and ethers.
-
-    // Initialize Web3Modal
-    const providerOptions = {};
-    const web3Modal = new window.Web3Modal.default({
-      cacheProvider: false,
-      providerOptions
-    });
+    // Optional Web3 & Contract Setup
+    const providerOptions = {}; // Add providers if needed
+    const web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
 
     let provider, signer, contract;
-
-    // Example contract details
-    const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace
+    const contractAddress = "YOUR_CONTRACT_ADDRESS";  // Replace with your contract address
     const contractABI = []; // Replace with your contract ABI
 
     // Connect wallet function
@@ -354,7 +346,7 @@
         signer = ethersProvider.getSigner();
         const userAddress = await signer.getAddress();
         alert(`Connected as: ${userAddress}`);
-        // Initialize contract (if needed)
+        // Initialize contract if needed
         contract = new ethers.Contract(contractAddress, contractABI, signer);
         updateConnectButtons();
       } catch (error) {
@@ -363,7 +355,7 @@
     }
 
     function updateConnectButtons() {
-      // Visually show wallet is connected
+      // Change text to "Connected" on both nav & mobile
       const navBtn = document.getElementById("connectWalletNav");
       if (navBtn) {
         navBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 mr-1"></i> Connected';
@@ -379,19 +371,18 @@
         mobileBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
         mobileBtn.classList.add('bg-green-500', 'cursor-not-allowed');
       }
-      lucide.createIcons(); // Refresh icons if needed
+      lucide.createIcons(); // Refresh icons after changing innerHTML
     }
 
-    // Mint function (example)
+    // Example minting function
     async function mintMemeBot() {
       if (!contract) {
         alert("Please connect your wallet first.");
         return;
       }
       try {
-        // Example: mint 1 NFT at 0.05 ETH
         const mintAmount = 1;
-        const cost = ethers.utils.parseEther("0.05");
+        const cost = ethers.utils.parseEther("0.05"); // example cost
         const tx = await contract.mint(mintAmount, { value: cost.mul(mintAmount) });
         await tx.wait();
         alert("MemeBot minted successfully!");
@@ -400,22 +391,23 @@
       }
     }
 
-    // DOM Listeners
+    // DOM Loaded
     document.addEventListener("DOMContentLoaded", () => {
-      // Hamburger
+      // Hamburger menu logic
       const hamburger = document.getElementById("hamburger");
       const mobileMenu = document.getElementById("mobileMenu");
-
       hamburger.addEventListener("click", () => {
         mobileMenu.classList.toggle("open");
         mobileMenu.classList.toggle("hidden");
       });
 
-      // Connect wallet buttons
-      document.getElementById("connectWalletNav").addEventListener("click", connectWallet);
-      document.getElementById("connectWalletMobile").addEventListener("click", connectWallet);
+      // Connect Wallet Buttons
+      const connectWalletNav = document.getElementById("connectWalletNav");
+      const connectWalletMobile = document.getElementById("connectWalletMobile");
+      connectWalletNav.addEventListener("click", connectWallet);
+      connectWalletMobile.addEventListener("click", connectWallet);
 
-      // Modal logic (optional if you want a separate modal)
+      // Modal logic (optional)
       const walletModal = document.getElementById("walletModal");
       const closeModal = document.getElementById("closeModal");
       if (closeModal) {
@@ -423,12 +415,21 @@
           walletModal.classList.add("hidden");
         });
       }
+      const connectWalletBtn = document.getElementById("connectWalletBtn");
+      if (connectWalletBtn) {
+        connectWalletBtn.addEventListener("click", () => {
+          connectWallet();
+          walletModal.classList.add("hidden");
+        });
+      }
 
       // Mint button
-      document.getElementById("mintButton").addEventListener("click", mintMemeBot);
+      const mintButton = document.getElementById("mintButton");
+      mintButton.addEventListener("click", mintMemeBot);
 
-      // "Get Started" scroll
-      document.getElementById("getStartedBtn").addEventListener("click", () => {
+      // "Get Started" button scroll
+      const getStartedBtn = document.getElementById("getStartedBtn");
+      getStartedBtn.addEventListener("click", () => {
         window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
       });
     });
