@@ -1,46 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>MemeBots.io - AI-Powered Meme Coin Revolution</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
-  
-  <!-- Web3Modal and Ethers.js CDN -->
+
+  <!-- Web3Modal and Ethers.js (if needed for wallet connection) -->
   <script src="https://cdn.jsdelivr.net/npm/web3modal@1.9.8/dist/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-  
-  <!-- Custom Styles -->
+
   <style>
     /* Smooth scrolling */
     html {
       scroll-behavior: smooth;
     }
-    
+
     /* Custom Button Styles */
     .btn-primary {
       @apply bg-gradient-to-r from-purple-500 to-indigo-500 px-6 py-3 rounded-lg font-bold text-lg hover:opacity-90 transition duration-300;
     }
-    
     .btn-secondary {
       @apply border border-purple-400 px-6 py-3 rounded-lg font-bold text-lg hover:bg-purple-800 hover:text-white transition duration-300;
     }
-    
+
     /* Modal Styles */
     .modal {
       @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden;
       z-index: 50;
     }
-    
     .modal-content {
       @apply bg-white dark:bg-gray-800 rounded-lg p-8 w-11/12 md:w-1/3 relative;
     }
-    
     .close-modal {
       @apply absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer;
     }
@@ -49,70 +45,78 @@
     .hamburger {
       @apply md:hidden cursor-pointer;
     }
-
     .mobile-menu {
       @apply hidden md:hidden;
     }
-
     .mobile-menu.open {
       @apply block;
     }
-
-    .mobile-menu a {
-      @apply block py-2 text-lg;
+    .mobile-menu a, .mobile-menu button {
+      @apply block py-2 text-lg w-3/4 mx-auto;
     }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-indigo-900 text-white">
-  
-  <!-- Modal for Wallet Connection -->
+
+  <!-- Modal for Connect Wallet (hidden by default) -->
   <div id="walletModal" class="modal">
     <div class="modal-content">
       <span id="closeModal" class="close-modal">&times;</span>
       <h2 class="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-      <button id="connectWalletBtn" class="btn-primary w-full">Connect Wallet</button>
-      <p class="mt-4 text-center text-sm text-gray-600">Supported wallets: MetaMask, WalletConnect, etc.</p>
+      <button id="connectWalletBtn" class="btn-primary w-full">
+        Connect Wallet
+      </button>
+      <p class="mt-4 text-center text-sm text-gray-600">
+        Supported wallets: MetaMask, WalletConnect, etc.
+      </p>
     </div>
   </div>
-  
-  <!-- Navigation Bar -->
-  <header class="container mx-auto px-4 py-4 flex justify-between items-center">
-    <div class="text-2xl font-bold">MemeBots.io</div>
-    <nav class="hidden md:flex space-x-6 items-center">
-      <a href="#protocol" class="hover:text-purple-300 flex items-center">
-        <i data-lucide="shield" class="w-5 h-5 mr-1"></i> Protocol
-      </a>
-      <a href="#how-it-works" class="hover:text-purple-300 flex items-center">
-        <i data-lucide="settings" class="w-5 h-5 mr-1"></i> How it Works
-      </a>
-      <button id="connectWalletNav" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg flex items-center">
+
+  <!-- Main Header / Nav Bar -->
+  <header class="border-b border-purple-700">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <!-- Logo / Brand Name -->
+      <div class="text-2xl font-bold">MemeBots.io</div>
+
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex space-x-6 items-center">
+        <a href="#protocol" class="hover:text-purple-300 flex items-center">
+          <i data-lucide="shield" class="w-5 h-5 mr-1"></i> Protocol
+        </a>
+        <a href="#how-it-works" class="hover:text-purple-300 flex items-center">
+          <i data-lucide="settings" class="w-5 h-5 mr-1"></i> How it Works
+        </a>
+        <button id="connectWalletNav" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg flex items-center">
+          <i data-lucide="user" class="w-5 h-5 mr-1"></i> Connect Wallet
+        </button>
+        <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg flex items-center">
+          <i data-lucide="plus-circle" class="w-5 h-5 mr-1"></i> Create New Agent
+        </button>
+      </nav>
+
+      <!-- Hamburger Icon (mobile only) -->
+      <div class="hamburger md:hidden" id="hamburger">
+        <i data-lucide="menu" class="w-6 h-6"></i>
+      </div>
+    </div>
+
+    <!-- Mobile Menu (hidden by default) -->
+    <nav id="mobileMenu" class="mobile-menu bg-purple-800 bg-opacity-95 text-center">
+      <a href="#protocol" class="hover:text-purple-300">Protocol</a>
+      <a href="#how-it-works" class="hover:text-purple-300">How it Works</a>
+      <button id="connectWalletMobile" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg my-2 flex items-center justify-center">
         <i data-lucide="user" class="w-5 h-5 mr-1"></i> Connect Wallet
       </button>
-      <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg flex items-center">
+      <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg my-2 flex items-center justify-center">
         <i data-lucide="plus-circle" class="w-5 h-5 mr-1"></i> Create New Agent
       </button>
     </nav>
-    <!-- Hamburger Menu -->
-    <div class="hamburger md:hidden" id="hamburger">
-      <i data-lucide="menu" class="w-6 h-6"></i>
-    </div>
   </header>
-  
-  <!-- Mobile Menu -->
-  <nav id="mobileMenu" class="mobile-menu bg-purple-800 bg-opacity-90 text-center">
-    <a href="#protocol" class="hover:text-purple-300">Protocol</a>
-    <a href="#how-it-works" class="hover:text-purple-300">How it Works</a>
-    <button id="connectWalletMobile" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg my-2 flex items-center justify-center w-3/4 mx-auto">
-      <i data-lucide="user" class="w-5 h-5 mr-1"></i> Connect Wallet
-    </button>
-    <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg my-2 flex items-center justify-center w-3/4 mx-auto">
-      <i data-lucide="plus-circle" class="w-5 h-5 mr-1"></i> Create New Agent
-    </button>
-  </nav>
-  
+
   <!-- Hero Section -->
-  <header class="container mx-auto px-4 py-16">
+  <section class="container mx-auto px-4 py-16">
     <div class="flex flex-col lg:flex-row items-center justify-between">
+      <!-- Hero Text -->
       <div class="w-full lg:w-1/2 mb-12 lg:mb-0">
         <h1 class="text-5xl md:text-6xl font-bold mb-6">
           AI-Powered Meme Coin Revolution
@@ -130,12 +134,19 @@
           </a>
         </div>
       </div>
+
+      <!-- Hero Image -->
       <div class="w-full lg:w-1/2 flex justify-center">
-        <img src="https://via.placeholder.com/500" alt="MemeBot Preview" class="rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300">
+        <!-- Replace this placeholder with your actual image -->
+        <img
+          src="https://via.placeholder.com/500"
+          alt="MemeBot Preview"
+          class="rounded-2xl shadow-lg transform hover:scale-105 transition-transform duration-300"
+        />
       </div>
     </div>
-  </header>
-  
+  </section>
+
   <!-- Features Section -->
   <section id="features" class="container mx-auto px-4 py-16">
     <h2 class="text-4xl font-bold text-center mb-12">Why Choose MemeBots?</h2>
@@ -143,21 +154,27 @@
       <div class="bg-purple-800 bg-opacity-50 p-6 rounded-xl text-center hover:bg-opacity-70 transition duration-300">
         <i data-lucide="bot" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
         <h3 class="text-xl font-bold mb-2">AI-Powered Automation</h3>
-        <p class="text-purple-200">Let your MemeBot handle promotion, engagement, and community building automatically.</p>
+        <p class="text-purple-200">
+          Let your MemeBot handle promotion, engagement, and community building automatically.
+        </p>
       </div>
       <div class="bg-purple-800 bg-opacity-50 p-6 rounded-xl text-center hover:bg-opacity-70 transition duration-300">
         <i data-lucide="coins" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
         <h3 class="text-xl font-bold mb-2">Create Your Meme Coin</h3>
-        <p class="text-purple-200">Launch your own meme coin with just a few clicks. Your MemeBot handles distribution.</p>
+        <p class="text-purple-200">
+          Launch your own meme coin with just a few clicks. Your MemeBot handles distribution.
+        </p>
       </div>
       <div class="bg-purple-800 bg-opacity-50 p-6 rounded-xl text-center hover:bg-opacity-70 transition duration-300">
         <i data-lucide="zap" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
         <h3 class="text-xl font-bold mb-2">Viral Marketing</h3>
-        <p class="text-purple-200">Leverage AI-driven content creation for maximum reach and engagement.</p>
+        <p class="text-purple-200">
+          Leverage AI-driven content creation for maximum reach and engagement.
+        </p>
       </div>
     </div>
   </section>
-  
+
   <!-- How it Works -->
   <section id="how-it-works" class="bg-purple-800 bg-opacity-50 py-16">
     <div class="container mx-auto px-4">
@@ -194,13 +211,15 @@
       </div>
     </div>
   </section>
-  
+
   <!-- Stats Section -->
   <section class="container mx-auto px-4 py-16">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
       <div>
         <div class="text-4xl font-bold mb-2">1,000</div>
-        <div class="text-purple-200">MemeBots (500 New Meme Coins + 500 Established Meme Coins)</div>
+        <div class="text-purple-200">
+          MemeBots (500 New Meme Coins + 500 Established Meme Coins)
+        </div>
       </div>
       <div>
         <div class="text-4xl font-bold mb-2">$1B+</div>
@@ -212,7 +231,7 @@
       </div>
     </div>
   </section>
-  
+
   <!-- CTA Section -->
   <section class="container mx-auto px-4 py-16 text-center">
     <h2 class="text-4xl font-bold mb-6">Ready to Join the Revolution?</h2>
@@ -224,47 +243,71 @@
       Get Started Now
     </button>
   </section>
-  
+
   <!-- Footer -->
   <footer class="border-t border-purple-700 mt-16">
     <div class="container mx-auto px-4 py-12">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <!-- Column 1 - Logo and Copyright -->
+        <!-- Column 1 -->
         <div class="space-y-4">
           <div class="text-2xl font-bold">MemeBots.io</div>
-          <p class="text-sm text-purple-300">© 2024 MemeBots.io All Rights Reserved.</p>
-          <a href="#legal" class="text-sm text-purple-300 hover:text-white">Legal Disclaimer</a>
+          <p class="text-sm text-purple-300">
+            © 2024 MemeBots.io All Rights Reserved.
+          </p>
+          <a href="#legal" class="text-sm text-purple-300 hover:text-white">
+            Legal Disclaimer
+          </a>
         </div>
-        
-        <!-- Column 2 - Documentation -->
+
+        <!-- Column 2 -->
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Documentation</h3>
           <div class="space-y-2">
-            <a href="#whitepaper" class="block text-purple-300 hover:text-white">Whitepaper</a>
-            <a href="#governance" class="block text-purple-300 hover:text-white">Governance Forum</a>
+            <a href="#whitepaper" class="block text-purple-300 hover:text-white">
+              Whitepaper
+            </a>
+            <a href="#governance" class="block text-purple-300 hover:text-white">
+              Governance Forum
+            </a>
           </div>
         </div>
-        
-        <!-- Column 3 - Community -->
+
+        <!-- Column 3 -->
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Community</h3>
           <div class="space-y-2">
-            <a href="https://t.me/memebots" target="_blank" class="block text-purple-300 hover:text-white flex items-center justify-center">
+            <a
+              href="https://t.me/memebots"
+              target="_blank"
+              class="block text-purple-300 hover:text-white flex items-center"
+            >
               <i data-lucide="telegram" class="w-5 h-5 mr-2"></i> Telegram
             </a>
-            <a href="https://twitter.com/memebots" target="_blank" class="block text-purple-300 hover:text-white flex items-center justify-center">
+            <a
+              href="https://twitter.com/memebots"
+              target="_blank"
+              class="block text-purple-300 hover:text-white flex items-center"
+            >
               <i data-lucide="twitter" class="w-5 h-5 mr-2"></i> X (Twitter)
             </a>
-            <a href="https://youtube.com/memebots" target="_blank" class="block text-purple-300 hover:text-white flex items-center justify-center">
+            <a
+              href="https://youtube.com/memebots"
+              target="_blank"
+              class="block text-purple-300 hover:text-white flex items-center"
+            >
               <i data-lucide="youtube" class="w-5 h-5 mr-2"></i> YouTube
             </a>
-            <a href="https://coingecko.com/en/coins/memebots" target="_blank" class="block text-purple-300 hover:text-white flex items-center justify-center">
+            <a
+              href="https://coingecko.com/en/coins/memebots"
+              target="_blank"
+              class="block text-purple-300 hover:text-white flex items-center"
+            >
               <i data-lucide="bar-chart-2" class="w-5 h-5 mr-2"></i> Coingecko
             </a>
           </div>
         </div>
-        
-        <!-- Column 4 - Token Info -->
+
+        <!-- Column 4 -->
         <div class="space-y-4">
           <div>
             <h3 class="font-bold mb-2">A Public Good for</h3>
@@ -272,128 +315,123 @@
           </div>
           <div>
             <p class="text-sm text-purple-300">Contract Address:</p>
-            <p class="text-sm font-mono text-purple-400">0x0b3e...4e7E1b</p>
+            <p class="text-sm font-mono text-purple-400">
+              0x0b3e...4e7E1b
+            </p>
           </div>
         </div>
       </div>
     </div>
   </footer>
-  
+
   <!-- Initialize Lucide Icons -->
   <script>
     lucide.createIcons();
   </script>
-  
-  <!-- Web3 Integration Script -->
-  <script>
-    // Initialize Web3Modal
-    const providerOptions = {
-      /* Add wallet providers here if needed */
-    };
 
+  <!-- Basic Web3 / Menu Script -->
+  <script>
+    // Optional: If not using Web3, remove references to web3Modal and ethers.
+
+    // Initialize Web3Modal
+    const providerOptions = {};
     const web3Modal = new window.Web3Modal.default({
-      cacheProvider: false, // optional
-      providerOptions, // required
+      cacheProvider: false,
+      providerOptions
     });
 
-    let provider;
-    let signer;
-    let contract;
+    let provider, signer, contract;
 
-    const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace with your contract address
-    const contractABI = [ /* YOUR_CONTRACT_ABI */ ]; // Replace with your contract ABI
+    // Example contract details
+    const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace
+    const contractABI = []; // Replace with your contract ABI
 
-    // Connect Wallet Function
+    // Connect wallet function
     async function connectWallet() {
       try {
         provider = await web3Modal.connect();
         const ethersProvider = new ethers.providers.Web3Provider(provider);
         signer = ethersProvider.getSigner();
         const userAddress = await signer.getAddress();
-        alert(`Connected as ${userAddress}`);
-        // Initialize contract
+        alert(`Connected as: ${userAddress}`);
+        // Initialize contract (if needed)
         contract = new ethers.Contract(contractAddress, contractABI, signer);
-        updateConnectButtons(userAddress);
+        updateConnectButtons();
       } catch (error) {
-        console.error("Could not connect to wallet", error);
+        console.error("Could not connect wallet:", error);
       }
     }
 
-    // Update Connect Wallet Buttons After Connection
-    function updateConnectButtons(address) {
-      const connectButtons = document.querySelectorAll('#connectWalletNav, #connectWalletMobile');
-      connectButtons.forEach(button => {
-        button.innerHTML = `<i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> Connected`;
-        button.disabled = true;
-        button.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-        button.classList.add('bg-green-500', 'cursor-not-allowed');
-      });
+    function updateConnectButtons() {
+      // Visually show wallet is connected
+      const navBtn = document.getElementById("connectWalletNav");
+      if (navBtn) {
+        navBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 mr-1"></i> Connected';
+        navBtn.disabled = true;
+        navBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+        navBtn.classList.add('bg-green-500', 'cursor-not-allowed');
+      }
+
+      const mobileBtn = document.getElementById("connectWalletMobile");
+      if (mobileBtn) {
+        mobileBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 mr-1"></i> Connected';
+        mobileBtn.disabled = true;
+        mobileBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+        mobileBtn.classList.add('bg-green-500', 'cursor-not-allowed');
+      }
+      lucide.createIcons(); // Refresh icons if needed
     }
 
-    // Mint Function
+    // Mint function (example)
     async function mintMemeBot() {
       if (!contract) {
         alert("Please connect your wallet first.");
         return;
       }
-
       try {
-        const mintAmount = 1; // You can enhance this to allow user input
-        const cost = ethers.utils.parseEther("0.05"); // Replace with your mint cost
+        // Example: mint 1 NFT at 0.05 ETH
+        const mintAmount = 1;
+        const cost = ethers.utils.parseEther("0.05");
         const tx = await contract.mint(mintAmount, { value: cost.mul(mintAmount) });
         await tx.wait();
-        alert("MemeBot Minted Successfully!");
+        alert("MemeBot minted successfully!");
       } catch (error) {
-        console.error("Minting failed", error);
-        alert("Minting failed. See console for details.");
+        console.error("Minting failed:", error);
       }
     }
 
-    // Event Listeners for Navigation Connect Buttons
-    document.getElementById("connectWalletNav").addEventListener("click", () => {
-      connectWallet();
-      document.getElementById("walletModal").classList.add("hidden");
-    });
+    // DOM Listeners
+    document.addEventListener("DOMContentLoaded", () => {
+      // Hamburger
+      const hamburger = document.getElementById("hamburger");
+      const mobileMenu = document.getElementById("mobileMenu");
 
-    document.getElementById("connectWalletMobile").addEventListener("click", () => {
-      connectWallet();
-      document.getElementById("mobileMenu").classList.add("hidden");
-    });
+      hamburger.addEventListener("click", () => {
+        mobileMenu.classList.toggle("open");
+        mobileMenu.classList.toggle("hidden");
+      });
 
-    // Event Listeners for Modal
-    document.getElementById("openWalletModal").addEventListener("click", () => {
-      document.getElementById("walletModal").classList.remove("hidden");
-    });
+      // Connect wallet buttons
+      document.getElementById("connectWalletNav").addEventListener("click", connectWallet);
+      document.getElementById("connectWalletMobile").addEventListener("click", connectWallet);
 
-    document.getElementById("closeModal").addEventListener("click", () => {
-      document.getElementById("walletModal").classList.add("hidden");
-    });
+      // Modal logic (optional if you want a separate modal)
+      const walletModal = document.getElementById("walletModal");
+      const closeModal = document.getElementById("closeModal");
+      if (closeModal) {
+        closeModal.addEventListener("click", () => {
+          walletModal.classList.add("hidden");
+        });
+      }
 
-    document.getElementById("connectWalletBtn").addEventListener("click", () => {
-      connectWallet();
-      document.getElementById("walletModal").classList.add("hidden");
-    });
+      // Mint button
+      document.getElementById("mintButton").addEventListener("click", mintMemeBot);
 
-    // Event Listener for Mint Button
-    document.getElementById("mintButton").addEventListener("click", () => {
-      mintMemeBot();
-    });
-
-    // Event Listener for Get Started Button
-    document.getElementById("getStartedBtn").addEventListener("click", () => {
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: 'smooth'
+      // "Get Started" scroll
+      document.getElementById("getStartedBtn").addEventListener("click", () => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
       });
     });
-
-    // Event Listener for Hamburger Menu
-    document.getElementById("hamburger").addEventListener("click", () => {
-      const mobileMenu = document.getElementById("mobileMenu");
-      mobileMenu.classList.toggle("open");
-      mobileMenu.classList.toggle("hidden");
-    });
   </script>
-  
 </body>
 </html>
