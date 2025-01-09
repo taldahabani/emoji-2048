@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MemeBots.io - AI-Powered Meme Coin Revolution</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Web3Modal and Ethers.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3modal/1.9.8/index.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Smooth scrolling */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(91, 33, 182, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(45deg, #f6d365 0%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Custom animation */
+    .float {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+      100% { transform: translateY(0px); }
+    }
+
+    /* Custom button styles */
+    .btn-primary {
+      @apply bg-gradient-to-r from-violet-500 to-fuchsia-500 
+             px-6 py-3 rounded-xl font-bold text-lg
+             hover:opacity-90 transition duration-300
+             shadow-lg hover:shadow-xl
+             flex items-center justify-center gap-2;
+    }
+
+    .btn-secondary {
+      @apply bg-gradient-to-r from-gray-900 to-purple-900
+             border border-purple-400 px-6 py-3 rounded-xl 
+             font-bold text-lg hover:bg-purple-800 
+             transition duration-300 shadow-lg
+             flex items-center justify-center gap-2;
+    }
+
+    /* Navbar styles */
+    .nav-link {
+      @apply flex items-center gap-2 px-4 py-2 rounded-lg
+             hover:bg-purple-800 hover:text-white
+             transition duration-300;
+    }
+
+    /* Mobile menu animation */
+    .mobile-menu {
+      transition: transform 0.3s ease-in-out;
+      transform: translateY(-100%);
+    }
+
+    .mobile-menu.open {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-indigo-900 text-white">
+  <!-- Header -->
+  <header class="fixed w-full z-50 glass">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex justify-between items-center">
+        <!-- Logo -->
+        <div class="flex items-center gap-2">
+          <i data-lucide="bot" class="w-8 h-8 text-purple-400"></i>
+          <span class="text-2xl font-bold gradient-text">MemeBots.io</span>
+        </div>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center gap-6">
+          <a href="#protocol" class="nav-link">
+            <i data-lucide="shield" class="w-5 h-5"></i>
+            Protocol
+          </a>
+          <a href="#how-it-works" class="nav-link">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            How it Works
+          </a>
+          <button id="connectWalletBtn" class="btn-primary">
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            Connect Wallet
+          </button>
+          <button class="btn-secondary">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            Create Agent
+          </button>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <button id="menuBtn" class="md:hidden p-2 hover:bg-purple-800 rounded-lg">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <nav id="mobileMenu" class="mobile-menu absolute w-full bg-gray-900 md:hidden">
+      <div class="container mx-auto px-4 py-4 flex flex-col gap-4">
+        <a href="#protocol" class="nav-link">
+          <i data-lucide="shield" class="w-5 h-5"></i>
+          Protocol
+        </a>
+        <a href="#how-it-works" class="nav-link">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+          How it Works
+        </a>
+        <button id="connectWalletBtnMobile" class="btn-primary">
+          <i data-lucide="wallet" class="w-5 h-5"></i>
+          Connect Wallet
+        </button>
+        <button class="btn-secondary">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          Create Agent
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="container mx-auto px-4 pt-32 pb-16">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-12">
+      <div class="w-full lg:w-1/2">
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">
+          AI-Powered <span class="gradient-text">Meme Coin</span> Revolution
+        </h1>
+        <p class="text-xl mb-8 text-gray-300">
+          Create, promote, and dominate the meme coin space with autonomous AI agents.
+          Own your MemeBot NFT and join the future of crypto culture.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <button id="mintBtn" class="btn-primary">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            Mint Your MemeBot
+          </button>
+          <a href="#features" class="btn-secondary">
+            <i data-lucide="info" class="w-5 h-5"></i>
+            Learn More
+          </a>
+        </div>
+      </div>
+      <div class="w-full lg:w-1/2">
+        <img
+          src="/api/placeholder/600/400"
+          alt="MemeBot Preview"
+          class="rounded-2xl shadow-2xl float"
+        />
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container mx-auto px-4 py-16">
+    <h2 class="text-4xl font-bold text-center mb-12">
+      Why Choose <span class="gradient-text">MemeBots</span>?
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition duration-300">
+        <i data-lucide="bot" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
+        <h3 class="text-xl font-bold mb-2">AI-Powered Automation</h3>
+        <p class="text-gray-300">
+          Let your MemeBot handle promotion, engagement, and community building automatically.
+        </p>
+      </div>
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition duration-300">
+        <i data-lucide="coins" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
+        <h3 class="text-xl font-bold mb-2">Create Your Meme Coin</h3>
+        <p class="text-gray-300">
+          Launch your own meme coin with just a few clicks. Your MemeBot handles distribution.
+        </p>
+      </div>
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition duration-300">
+        <i data-lucide="trending-up" class="w-12 h-12 text-purple-400 mx-auto mb-4"></i>
+        <h3 class="text-xl font-bold mb-2">Viral Marketing</h3>
+        <p class="text-gray-300">
+          Leverage AI-driven content creation for maximum reach and engagement.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works Section -->
+  <section id="how-it-works" class="container mx-auto px-4 py-16">
+    <h2 class="text-4xl font-bold text-center mb-12">
+      How <span class="gradient-text">MemeBots</span> Work
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <!-- Step 1 -->
+      <div class="glass p-8 rounded-2xl text-center relative hover:scale-105 transition-all duration-300">
+        <div class="w-12 h-12 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-xl font-bold absolute -top-6 left-1/2 transform -translate-x-1/2">
+          1
+        </div>
+        <i data-lucide="sparkles" class="w-12 h-12 mx-auto mb-4 text-purple-400"></i>
+        <h3 class="text-xl font-bold mb-2">Mint Your MemeBot</h3>
+        <p class="text-gray-300">Each NFT is a unique AI agent with its own personality.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass p-8 rounded-2xl text-center relative hover:scale-105 transition-all duration-300">
+        <div class="w-12 h-12 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-xl font-bold absolute -top-6 left-1/2 transform -translate-x-1/2">
+          2
+        </div>
+        <i data-lucide="settings" class="w-12 h-12 mx-auto mb-4 text-purple-400"></i>
+        <h3 class="text-xl font-bold mb-2">Activate & Configure</h3>
+        <p class="text-gray-300">Choose to promote existing coins or create your own.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass p-8 rounded-2xl text-center relative hover:scale-105 transition-all duration-300">
+        <div class="w-12 h-12 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-xl font-bold absolute -top-6 left-1/2 transform -translate-x-1/2">
+          3
+        </div>
+        <i data-lucide="trending-up" class="w-12 h-12 mx-auto mb-4 text-purple-400"></i>
+        <h3 class="text-xl font-bold mb-2">Watch it Grow</h3>
+        <p class="text-gray-300">Your MemeBot engages with the community automatically.</p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="glass p-8 rounded-2xl text-center relative hover:scale-105 transition-all duration-300">
+        <div class="w-12 h-12 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center text-xl font-bold absolute -top-6 left-1/2 transform -translate-x-1/2">
+          4
+        </div>
+        <i data-lucide="coins" class="w-12 h-12 mx-auto mb-4 text-purple-400"></i>
+        <h3 class="text-xl font-bold mb-2">Earn Rewards</h3>
+        <p class="text-gray-300">Profit from your bot's activity and coin performance.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="container mx-auto px-4 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Stat 1 -->
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition-all duration-300">
+        <div class="text-4xl font-bold mb-4 gradient-text">1,000</div>
+        <p class="text-gray-300">MemeBots (500 New Meme Coins + 500 Established Meme Coins)</p>
+      </div>
+
+      <!-- Stat 2 -->
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition-all duration-300">
+        <div class="text-4xl font-bold mb-4 gradient-text">$1B+</div>
+        <p class="text-gray-300">Total Volume</p>
+      </div>
+
+      <!-- Stat 3 -->
+      <div class="glass p-8 rounded-2xl text-center hover:scale-105 transition-all duration-300">
+        <div class="text-4xl font-bold mb-4 gradient-text">100K+</div>
+        <p class="text-gray-300">Community Members</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="container mx-auto px-4 py-16 text-center">
+    <div class="glass p-12 rounded-2xl max-w-4xl mx-auto">
+      <h2 class="text-4xl font-bold mb-6">Ready to Join the Revolution?</h2>
+      <p class="text-xl mb-8 text-gray-300">
+        Don't miss out on the future of meme coins. Mint your MemeBot today and start
+        building your crypto empire.
+      </p>
+      <button id="getStartedBtn" class="btn-primary mx-auto">
+        <i data-lucide="rocket" class="w-5 h-5"></i>
+        Get Started Now
+      </button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-purple-700 mt-16 glass">
+    <div class="container mx-auto px-4 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <!-- Column 1 - Brand -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-2">
+            <i data-lucide="bot" class="w-8 h-8 text-purple-400"></i>
+            <span class="text-2xl font-bold gradient-text">MemeBots.io</span>
+          </div>
+          <p class="text-sm text-gray-300">
+            © 2024 MemeBots.io All Rights Reserved.
+          </p>
+          <a href="#legal" class="text-sm text-gray-300 hover:text-white transition duration-300">
+            Legal Disclaimer
+          </a>
+        </div>
+
+        <!-- Column 2 - Documentation -->
+        <div class="space-y-4">
+          <h3 class="text-xl font-bold mb-4">Documentation</h3>
+          <div class="flex flex-col space-y-2">
+            <a href="#whitepaper" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+              Whitepaper
+            </a>
+            <a href="#governance" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="landmark" class="w-5 h-5"></i>
+              Governance Forum
+            </a>
+          </div>
+        </div>
+
+        <!-- Column 3 - Community -->
+        <div class="space-y-4">
+          <h3 class="text-xl font-bold mb-4">Community</h3>
+          <div class="flex flex-col space-y-2">
+            <a href="https://t.me/memebots" target="_blank" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="send" class="w-5 h-5"></i>
+              Telegram
+            </a>
+            <a href="https://twitter.com/memebots" target="_blank" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="twitter" class="w-5 h-5"></i>
+              X (Twitter)
+            </a>
+            <a href="https://youtube.com/memebots" target="_blank" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="youtube" class="w-5 h-5"></i>
+              YouTube
+            </a>
+            <a href="https://coingecko.com/en/coins/memebots" target="_blank" class="text-gray-300 hover:text-white transition duration-300 flex items-center gap-2">
+              <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
+              Coingecko
+            </a>
+          </div>
+        </div>
+
+        <!-- Column 4 - Token Info -->
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-xl font-bold mb-2">A Public Good for</h3>
+            <div class="text-2xl font-bold gradient-text">$MEMEBOT</div>
+          </div>
+          <div class="glass p-4 rounded-lg">
+            <p class="text-sm text-gray-300 mb-2">Contract Address:</p>
+            <p class="text-sm font-mono text-purple-400 break-all">
+              0x0b3e...4e7E1b
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+  
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // Mobile menu functionality
+    const menuBtn = document.getElementById('menuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    menuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('open');
+    });
+
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!menuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.remove('open');
+      }
+    });
+
+    // Web3 functionality
+    const web3Modal = new Web3Modal.default({
+      cacheProvider: false,
+      providerOptions: {}
+    });
+
+    let provider, signer, contract;
+
+    async function connectWallet() {
+      try {
+        provider = await web3Modal.connect();
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        signer = ethersProvider.getSigner();
+        const address = await signer.getAddress();
+        
+        // Update button states
+        const connectBtns = document.querySelectorAll('#connectWalletBtn, #connectWalletBtnMobile');
+        connectBtns.forEach(btn => {
+          btn.innerHTML = `
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            ${address.slice(0, 6)}...${address.slice(-4)}
+          `;
+          btn.classList.add('bg-green-500');
+          btn.disabled = true;
+        });
+        
+        lucide.createIcons();
+      } catch (error) {
+        console.error('Connection failed:', error);
+      }
+    }
+
+    // Connect wallet button listeners
+    document.querySelectorAll('#connectWalletBtn, #connectWalletBtnMobile')
+      .forEach(btn => btn.addEventListener('click', connectWallet));
+
+    // Mint button listener
+    document.getElementById('mintBtn').addEventListener('click', async () => {
+      if (!signer) {
+        await connectWallet();
+      }
+      // Add minting logic here
+    });
+  </script>
+</body>
+</html>
