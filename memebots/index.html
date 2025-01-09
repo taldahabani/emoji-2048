@@ -8,23 +8,33 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+  <!-- Web3Modal CDN -->
+  <script src="https://unpkg.com/web3modal/dist/index.js"></script>
+  <!-- Ethers.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <style>
     /* Custom styles if needed */
+    .btn-primary {
+      @apply bg-gradient-to-r from-purple-500 to-indigo-500 px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90;
+    }
+    .btn-secondary {
+      @apply border border-purple-400 px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-800;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-purple-900 via-purple-800 to-indigo-900 text-white">
-  
+
   <!-- Hero Section -->
   <header class="container mx-auto px-4 py-16">
     <nav class="flex justify-between items-center mb-16">
       <div class="text-2xl font-bold">MemeBots.io</div>
       <div class="space-x-6">
-        <button class="hover:text-purple-300">Protocol</button>
-        <button class="hover:text-purple-300">How it Works</button>
-        <button class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg">
+        <a href="#features" class="hover:text-purple-300">Features</a>
+        <a href="#how-it-works" class="hover:text-purple-300">How it Works</a>
+        <button id="connect-wallet" class="bg-purple-500 hover:bg-purple-600 px-4 py-2 rounded-lg">
           Connect Wallet
         </button>
-        <button class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg">
+        <button id="create-agent" class="bg-indigo-500 hover:bg-indigo-600 px-4 py-2 rounded-lg">
           Create New Agent
         </button>
       </div>
@@ -40,22 +50,22 @@
           Own your MemeBot NFT and join the future of crypto culture.
         </p>
         <div class="space-x-4">
-          <button class="bg-gradient-to-r from-purple-500 to-indigo-500 px-8 py-3 rounded-lg font-bold hover:opacity-90">
+          <button id="mint-nft" class="btn-primary">
             Mint Your MemeBot
           </button>
-          <button class="border border-purple-400 px-8 py-3 rounded-lg font-bold hover:bg-purple-800">
+          <a href="#learn-more" class="btn-secondary">
             Learn More
-          </button>
+          </a>
         </div>
       </div>
       <div class="w-full lg:w-1/2 flex justify-center">
-        <img src="https://via.placeholder.com/500" alt="MemeBot Preview" class="rounded-2xl shadow-lg">
+        <img src="/pepe.png" alt="MemeBot Preview" class="rounded-2xl shadow-lg">
       </div>
     </div>
   </header>
 
   <!-- Features Section -->
-  <section class="container mx-auto px-4 py-16">
+  <section id="features" class="container mx-auto px-4 py-16">
     <h2 class="text-4xl font-bold text-center mb-12">Why Choose MemeBots?</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="bg-purple-800 bg-opacity-50 p-6 rounded-xl text-center">
@@ -77,7 +87,7 @@
   </section>
 
   <!-- How it Works -->
-  <section class="bg-purple-800 bg-opacity-50 py-16">
+  <section id="how-it-works" class="bg-purple-800 bg-opacity-50 py-16">
     <div class="container mx-auto px-4">
       <h2 class="text-4xl font-bold text-center mb-12">How MemeBots Work</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -138,7 +148,7 @@
       Don't miss out on the future of meme coins. Mint your MemeBot today and start
       building your crypto empire.
     </p>
-    <button class="bg-gradient-to-r from-purple-500 to-indigo-500 px-8 py-4 rounded-lg font-bold text-lg hover:opacity-90">
+    <button id="get-started" class="btn-primary">
       Get Started Now
     </button>
   </section>
@@ -151,15 +161,15 @@
         <div class="space-y-4">
           <div class="text-2xl font-bold">MemeBots.io</div>
           <p class="text-sm text-purple-300">© 2024 MemeBots.io All Rights Reserved.</p>
-          <button class="text-sm text-purple-300 hover:text-white">Legal Disclaimer</button>
+          <a href="#legal" class="text-sm text-purple-300 hover:text-white">Legal Disclaimer</a>
         </div>
         
         <!-- Column 2 - Documentation -->
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Documentation</h3>
           <div class="space-y-2">
-            <button class="block text-purple-300 hover:text-white">Whitepaper</button>
-            <button class="block text-purple-300 hover:text-white">Governance Forum</button>
+            <a href="#whitepaper" class="block text-purple-300 hover:text-white">Whitepaper</a>
+            <a href="#governance-forum" class="block text-purple-300 hover:text-white">Governance Forum</a>
           </div>
         </div>
         
@@ -167,10 +177,10 @@
         <div class="space-y-4">
           <h3 class="font-bold mb-2">Community</h3>
           <div class="space-y-2">
-            <button class="block text-purple-300 hover:text-white">Telegram</button>
-            <button class="block text-purple-300 hover:text-white">X</button>
-            <button class="block text-purple-300 hover:text-white">YouTube</button>
-            <button class="block text-purple-300 hover:text-white">Coingecko</button>
+            <a href="https://t.me/MemeBots" target="_blank" class="block text-purple-300 hover:text-white">Telegram</a>
+            <a href="https://twitter.com/MemeBots" target="_blank" class="block text-purple-300 hover:text-white">X</a>
+            <a href="https://youtube.com/MemeBots" target="_blank" class="block text-purple-300 hover:text-white">YouTube</a>
+            <a href="https://coingecko.com/en/coins/memebot" target="_blank" class="block text-purple-300 hover:text-white">Coingecko</a>
           </div>
         </div>
         
@@ -192,6 +202,69 @@
   <!-- Initialize Lucide Icons -->
   <script>
     lucide.createIcons();
+  </script>
+
+  <!-- Web3 and Minting Functionality -->
+  <script>
+    // Web3Modal Initialization
+    const providerOptions = {
+      /* See Provider Options Section */
+    };
+
+    const web3Modal = new Web3Modal.default({
+      cacheProvider: false, // optional
+      providerOptions, // required
+    });
+
+    let provider;
+    let signer;
+    let contract;
+
+    const contractAddress = "YOUR_CONTRACT_ADDRESS"; // Replace with your contract address
+    const contractABI = [ /* YOUR_CONTRACT_ABI */ ]; // Replace with your contract's ABI
+
+    document.getElementById('connect-wallet').addEventListener('click', async () => {
+      try {
+        provider = await web3Modal.connect();
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        signer = ethersProvider.getSigner();
+        const address = await signer.getAddress();
+        alert(`Connected wallet: ${address}`);
+      } catch (error) {
+        console.error("Could not connect to wallet", error);
+      }
+    });
+
+    document.getElementById('mint-nft').addEventListener('click', async () => {
+      if (!signer) {
+        alert("Please connect your wallet first.");
+        return;
+      }
+
+      try {
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const mintAmount = 1; // You can enhance this to allow user input
+        const cost = await contract.cost(); // Assuming your contract has a 'cost' variable
+        const tx = await contract.mint(mintAmount, { value: cost.mul(mintAmount) });
+        alert("Transaction sent! Waiting for confirmation...");
+        await tx.wait();
+        alert("Mint successful!");
+      } catch (error) {
+        console.error("Minting failed", error);
+        alert("Minting failed. See console for details.");
+      }
+    });
+
+    // Optional: Handle wallet disconnect
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', (accounts) => {
+        if (accounts.length === 0) {
+          alert('Please connect to MetaMask.');
+        } else {
+          alert(`Connected wallet: ${accounts[0]}`);
+        }
+      });
+    }
   </script>
 </body>
 </html>
